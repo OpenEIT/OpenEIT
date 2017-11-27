@@ -87,7 +87,7 @@ class Gui(object):
 		self.file_marker = 0
 		self.file_name = ''
 		self.data_file_array = []
-		# These numbers will often need to be changed? 
+		# Will this often need to be changed? 
 		scale_max					= 90000
 		self.sliders = [0,scale_max,0,scale_max]
 
@@ -378,7 +378,7 @@ class Gui(object):
 				self.file_marker += 1
 
 	def About(self):
-		print "This is a simple example of a menu"
+		print "Open Source Biomedical Imaging Project"
 
 	def Eitwin(self):
 
