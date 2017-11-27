@@ -12,6 +12,28 @@ python dashboard.py runs everything.
 
 If you don't have any of the dependencies installed you should get an error, otherwise the dashboard GUI should be ready to use. 
 
+Environment Notes: 
+
+Install xcode command line tools: xcode-select --install
+
+Recommended python environment set up: http://docs.python-guide.org/en/latest/starting/install/osx/
+ except change brew install python --with-tcl-tk
+ brew install python --with-tcl-tk
+to install tkinter in the same package.  
+
+tkinter library : brew install homebrew/dupes/tcl-tk
+
+Package Dependencies pip install each of the following:
+* matplotlib
+* pyserial
+* scipy
+* scikit-image
+* numpy
+* imageio
+
+
+
+
 ![alt text](images/dashboard.png "EIT Dashboard")
 
 As you can see you can either save data streamed through the PCB via a serial connection for offline processing, or display the reconstruction in real-time. You can also read in a previosuly recorded file, and step through it one frame at a time. 

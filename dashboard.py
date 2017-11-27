@@ -1,16 +1,37 @@
+from __future__ import print_function
+import future        # pip install future
+import builtins      # pip install future
+import past          # pip install future
+import six           # pip install six
 import sys
-import Tkinter
-from Tkinter import *
+
+# import Tkinter
+# from Tkinter import *
+# if sys.version_info[0] < 3:
+#     import Tkinter as Tk
+# else:
+#     import tkinter as Tk 
+
 if sys.version_info[0] < 3:
-    import Tkinter as Tk
+	import Tkinter
+	from Tkinter import *
+	import Tkinter as Tk
+	import tkFont
+	import tkFileDialog as filedialog
 else:
-    import tkinter as Tk 
+	import tkinter as Tkinter
+	from tkinter import *
+	import tkinter as Tk
+	from tkinter import filedialog
+	# from tkinter import tkFont
+
 import matplotlib as mpl
 mpl.use("TkAgg")
 # mpl.use('Qt4Agg')
 
-import tkFont
-import tkFileDialog as filedialog
+# import tkFont
+# import tkFileDialog as filedialog
+
 import Serialhandler
 import serial.tools.list_ports
 import Reconstruction as eit
@@ -184,7 +205,12 @@ class Gui(object):
 		if len(portnames) > 0 :
 			self.menuselect = StringVar(self.root)
 			self.menuselect.set(portnames[0])
-			listboxdataconnect = apply(OptionMenu, (self.root, self.menuselect) + tuple(portnames ))
+			# apply has been deprecated. 
+			# listboxdataconnect = apply(OptionMenu, (self.root, self.menuselect) + tuple(portnames ))
+			
+			listboxdataconnect = OptionMenu(*(self.root, self.menuselect) + tuple(portnames ))
+
+
 			listboxdataconnect.pack(in_=bottomframe1, side=Tkinter.LEFT , padx=3, pady=ypadding)
 
 			self.baselinebut = Tkinter.Button(master = bottomframe1, text="Baseline", command=self.baseline) 
@@ -202,7 +228,7 @@ class Gui(object):
 
 		else:
 		    # no serial port detected. 
-		    print "no serial port found, hope that's OK"
+		    print ('no serial port found, hope that\'s OK')
 		    self.text = "no serial port found, hope that's OK"
 		    if expertMode is False:
 		        tkMessageBox.showwarning(
@@ -258,7 +284,7 @@ class Gui(object):
 
 			self.update_figure()
 		else: 
-			print 'min has to be less than max for this to work. '
+			print ('min has to be less than max for this to work. ')
 			self.text = 'min has to be less than max for this to work. '
 
 	def record(self):
@@ -286,7 +312,7 @@ class Gui(object):
 			self.canvas.draw()
 			self.canvas.flush_events()
 		else: # If the top window is enabled, use it instead for updates. 
-			print 'top window update'
+			print ('top window update')
 			self.topplot.set_array(self.img)
 			self.topcanvas.draw()
 			self.topcanvas.flush_events()
@@ -332,7 +358,7 @@ class Gui(object):
 			data 		= [1.0 if x==0 else x for x in data] # remove zeros. nothing should be zero. 
 			self.img = self.image_reconstruct.eit_reconstruction(data)
 		except: # could consider descriptive error here. 
-			print 'reconstruction error: '
+			print ('reconstruction error: ')
 		self.total_processing_time += (time.time() - start_time)
 
 	# Take a baseline to be subtracted later. 		
@@ -378,7 +404,8 @@ class Gui(object):
 				self.file_marker += 1
 
 	def About(self):
-		print "Open Source Biomedical Imaging Project"
+		print ('Open Source Biomedical Imaging Project')
+
 
 	def Eitwin(self):
 
@@ -428,7 +455,7 @@ class Gui(object):
 		self.topcanvas._tkcanvas.pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
 	
 	def Something_else(self):
-		print "This is a simple example of a menu"		
+		print ('menu item')		
 
 	def quit(self):
 		self.root.quit()     # stops mainloop
@@ -444,7 +471,7 @@ class Gui(object):
 			if value is not "":
 				self.sliders[i]= int(value)
 			i = i+1
-		print 'slider values', self.sliders 
+		print ('slider values', self.sliders )
 		# # re-initialize the sliders ranges. 
 		self.w1.configure(from_=self.sliders[0], to=self.sliders[1])
 		self.w2.configure(from_=self.sliders[2], to=self.sliders[3])

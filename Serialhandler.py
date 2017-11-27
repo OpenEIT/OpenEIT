@@ -53,7 +53,7 @@ class Serialhandler(mp.Process):
 					# print 'multiline: remnant bytes', len(remnant_bytes)
 		# print 'bytebuffer: ',len(self.bytes)
 		if len(self.bytes) < 400: 
-			print self.bytes
+			print (self.bytes)
 
 		return self.single_line
 
@@ -77,22 +77,22 @@ class Serialhandler(mp.Process):
 		
 	def connect(self, port_selection):
 
-		print '[%s] running ...  process id: %s\n' % (self.name, os.getpid())
+		print ('[%s] running ...  process id: %s\n' % (self.name, os.getpid()))
 
 		if self.connectGui == True:
 			self.connectGui = False
 			try:
 				self.ser.close()
-				print "disconnected '" + port_selection + "'"
+				print ("disconnected '" + port_selection + "'")
 			except:
-				print "couldnt disconnect '" + port_selection + "'"
+				print ("couldnt disconnect '" + port_selection + "'")
 				pass
 			self.ser   = []
 			# self.bytes = ''
 		else:
 			# print "got port '" + port_selection + "'"
 			if False:
-				print 'something is up'
+				print ('something is up')
 				# check for serial port here
 				pass
 			else:
@@ -112,25 +112,25 @@ class Serialhandler(mp.Process):
 					self.ser.writeTimeout = 2   	 	 # timeout for write
 					self.ser.open()
 					self.connectGui = True
-					print 'Now connected to ' + self.ser.port
+					print ('Now connected to ' + self.ser.port)
 					sys.stdout.flush()
 
 				except:
-					print 'Cannot connect to ' +  port_selection
+					print ('Cannot connect to ' +  port_selection)
 					self.connectGui = False
 					sys.stdout.flush()
 
 	def record_toggle(self):
 
 		if self.isRecording == True: # It's already recording, so close it. 
-			print 'stop it recording: ', len(self.b),len(self.recorded_bytes)
+			print ('stop it recording: ', len(self.b),len(self.recorded_bytes))
 			timestr = time.strftime("%Y%m%d-%H%M%S")
 			self.fid = open('data_' + timestr + '.bin', 'ab')
 			self.fid.write(self.b)
 			self.fid.close()
 			self.isRecording = False
 		else:
-			print 'start recording'
+			print ('start recording')
 			self.isRecording = True
 
 	def getbytesize(self):

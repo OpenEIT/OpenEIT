@@ -9,7 +9,7 @@ import ctypes
 import matplotlib
 import scipy.misc
 import numpy as np
-import imageio
+# import imageio
 from skimage.draw import line as ll
 from skimage.draw import (line_aa, circle,
                           circle_perimeter_aa)
