@@ -10,30 +10,26 @@ Dashboard for real-time EIT processing and image reconstruction using filtered l
 
 python dashboard.py runs everything. 
 
-If you don't have any of the dependencies installed you should get an error, otherwise the dashboard GUI should be ready to use. 
+If you don't have any of the dependencies installed you should look at the environment notes below and follow those instructions, otherwise the dashboard GUI should be ready to use. 
 
 ## Environment Notes: 
 This dashboard runs in python 2.7 or python 3.6. I recommend using 3.6 just to be up to date with the times. 
 
 Recommended python environment set up: http://docs.python-guide.org/en/latest/starting/install/osx/
- except change brew install python --with-tcl-tk
- brew install python --with-tcl-tk
-to install tkinter in the same package.  
+ except change 'brew install python' to
+ 'brew install python --with-tcl-tk' to install tkinter in the same package.  
 
 Install xcode command line tools: xcode-select --install
 
 tkinter library : brew install homebrew/dupes/tcl-tk
 
-Package Dependencies pip install each of the following:
+Pip install each of the following: (i.e. pip install matplotlib)
 * matplotlib
 * pyserial
 * scipy
 * scikit-image
 * numpy
 * imageio
-
-
-
 
 ![alt text](images/dashboard.png "EIT Dashboard")
 
@@ -44,6 +40,8 @@ As you can see you can either save data streamed through the PCB via a serial co
 The sliders are completely configurable, and there is an option to baseline the image so you can adjust the colormap to be sensitive to smaller changes. The histogram functionality is intensive on the rendering so it's best not to over use it and use the menu item View->Dedicated Reconstruction Window once you have toggled the sliders sufficiently. Use the histogram distribution information to tune the sliders. You can also change the minimum and maximum range of the sliders in the text boxes below them. 
 
 The dashboard uses the multiprocessing library to run the serial and reconstruction algorithms in different processes to improve efficiency. There is a ring buffer that takes the data from the serial port, and processes it. Snakeviz was used to profile the code to decrease the rendering time as this appears to be what uses the bulk of the processing time. The filtered back projection reconstruction takes a very short time as can be seen in the real-time processing reports to screen. 
+
+##  Picture of reconstruction window up and running cross-correlated to phantom
 
 ![alt text](images/eit_anti-clockwise_motion.png "EIT and how it should appear")
 
