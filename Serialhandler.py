@@ -13,47 +13,45 @@ class Serialhandler(mp.Process):
 		# shared data. 
 		self.connectGui 	= mp.Value('d',False)
 		self.isRecording 	= mp.Value('d',False)
-		self.bytesum 		= mp.Array('c','')  
-		self.recorded_bytes = mp.Array('c','')
-		self.single_line 	= mp.Array('c','')
 
 		# internal byte buffers. 
-		self.curBytes 		= '' # array('c','') 
-		self.bytes 			= '' # array('c','')
-		self.b 				= '' # array('c','')
+		self.curBytes 		= b'' # array('c','') 
+		self.bytes 			= b'' # array('c','')
+		self.b 				= b'' # array('c','')
 		self.ser 			= []
 		self.fid 			= 0 
 
 	def sendline(self):
 		# 
 		# now self.bytes contains a bunch of stuff. 
-		# 
-		indices = [i for i, s in enumerate(self.bytes) if ':' in s]
-		# print indices, len(indices)
-		line = ''
-		remnant_bytes = ''
+		# something is up with this line. 
+		indices = [i for i, s in enumerate(self.bytes) if ord(':') == s]
+
+		line = b''
+		remnant_bytes = b''
 		# get a single line. 
 		if len(indices) >= 1:
 			if len(indices) == 1:
 				# we only want one line. 
 				line = self.bytes[indices[0]+1:-1]
-				datastring  = line.replace(" ","").split(',')
+				datastring  = line.replace(b" ",b"").split(b',')
 				if len(datastring) == 29: 
 					self.single_line = datastring[0:-1]
 					# Now, clear that line off the bytelist. 
-					self.bytes = ''
+					self.bytes = b''
 			else: 
 				line = self.bytes[indices[0]+1:indices[1]-1]
-				datastring  = line.replace(" ","").split(',')
+				datastring  = line.replace(b" ",b"").split(b',')
 				if len(datastring) == 29: 
 					remnant_bytes = self.bytes[indices[1]-1:]
+
 					self.single_line = datastring[0:-1]
 					# Now, clear that line off the bytelist. 
 					self.bytes = remnant_bytes
 					# print 'multiline: remnant bytes', len(remnant_bytes)
 		# print 'bytebuffer: ',len(self.bytes)
-		if len(self.bytes) < 400: 
-			print (self.bytes)
+		# if len(self.bytes) < 400: 
+		# 	print ('incomplete line:',self.bytes)
 
 		return self.single_line
 

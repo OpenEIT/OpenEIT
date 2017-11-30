@@ -85,7 +85,7 @@ class Reconstruction(mp.Process):
 		# 
 		x = []
 		y = []
-		for i in xrange(len(n1)):
+		for i in range(len(n1)):
 			x.append(int(n1[i]))
 			y.append(int(n2[i]))
 
@@ -93,7 +93,7 @@ class Reconstruction(mp.Process):
 
 		d 		= dict()
 		# 8 choose 2
-		for i in xrange(28):
+		for i in range(28):
 			number = str(self.logfile[i])
 			point1,point2 = int(number[0])-1, int(number[1])-1
 			# Get the gradient angle theta. 
@@ -135,7 +135,7 @@ class Reconstruction(mp.Process):
 
 		interp_projections = []
 		# Now interpolate for each angled projection, and place back into the projection. 
-		for i in xrange(len(deg)):
+		for i in range(len(deg)):
 			# print 'degrees: ',deg[i],d[deg[i]].shape, deg
 			# sinogram = radon(image, theta=theta, circle=True)
 			projections = radon(d[deg[i]], theta=deg, circle= True)
@@ -144,7 +144,7 @@ class Reconstruction(mp.Process):
 			# problem is lines at angle, or indices next to each other should just be one value..
 			# 
 			# sift through p. if 
-			for t in xrange(len(p)):
+			for t in range(len(p)):
 				if p[t]>0:
 					if p[t+1]>p[t]:
 						p[t]=0
@@ -186,11 +186,11 @@ class Reconstruction(mp.Process):
 		return image
 
 	def eit_reconstruction(self,data): 
-		
+	
+
 		d, deg = self.makeimages(data)
-		
 		image = self.reconstruct(d,deg)
-		
+	
 		# self.img - self.baseline_image
 		# self.image_reconstruct.subtract_baseline()		
 		# self.shared_image = self.img - self.baseline_image			

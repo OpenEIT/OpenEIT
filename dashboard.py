@@ -1,8 +1,8 @@
-from __future__ import print_function
-import future        # pip install future
-import builtins      # pip install future
-import past          # pip install future
-import six           # pip install six
+# from __future__ import print_function
+# import future        # pip install future
+# import builtins      # pip install future
+# import past          # pip install future
+# import six           # pip install six
 import sys
 
 # import Tkinter
@@ -344,7 +344,9 @@ class Gui(object):
 		bytebuffer = self.s.get_len_bytes()
 		if bytebuffer > 0: 
 			line = self.s.sendline()
+			
 			self.parse_data(line)
+
 			self.update_figure()
 
 		self.text = 'time render: %.2f time math: %.2f byte buffer: %d' %(self.total_rendering_time, self.total_processing_time,bytebuffer)
@@ -354,11 +356,15 @@ class Gui(object):
 	def parse_data(self,line):
 		start_time = time.time()
 		try: 
-			data 	 	= map(float, line) # leave out the final empty element. 
+			data 	 	= map(float, line ) # leave out the final empty element. 
 			data 		= [1.0 if x==0 else x for x in data] # remove zeros. nothing should be zero. 
+			
 			self.img = self.image_reconstruct.eit_reconstruction(data)
-		except: # could consider descriptive error here. 
-			print ('reconstruction error: ')
+
+
+		except (RuntimeError, TypeError, NameError) as err:
+		# except: # could consider descriptive error here. 
+			print ('reconstruction error: ',err)
 		self.total_processing_time += (time.time() - start_time)
 
 	# Take a baseline to be subtracted later. 		

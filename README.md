@@ -13,16 +13,13 @@ python dashboard.py runs everything.
 If you don't have any of the dependencies installed you should look at the environment notes below and follow those instructions, otherwise the dashboard GUI should be ready to use. 
 
 ## Environment Notes: 
-This dashboard runs in python 2.7 or python 3.6. I recommend using 3.6 just to be up to date with the times. 
+This dashboard runs python 3.6 installed via anaconda integrated scientific computing environment. The only extra install is pyserial which you can install with the command 'conda install pyserial'
 
-Recommended python environment set up: http://docs.python-guide.org/en/latest/starting/install/osx/
- except change 'brew install python' to
+If you don't want to install anaconda you can install the following packages:
+ 'brew install python' to
  'brew install python --with-tcl-tk' to install tkinter in the same package.  
-
 Install xcode command line tools: xcode-select --install
-
 tkinter library : brew install homebrew/dupes/tcl-tk
-
 Pip install each of the following: (i.e. pip install matplotlib)
 * matplotlib
 * pyserial
