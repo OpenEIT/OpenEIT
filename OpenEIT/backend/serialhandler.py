@@ -27,12 +27,15 @@ def parse_line(line):
     return items
 
 
-class Serialhandler:
+class SerialHandler:
 
     def __init__(self, queue):
         self._connection_lock = threading.Lock()
         self._reader_thread = None
         self._queue = queue
+        self._recording_lock = threading.Lock()
+        self._recording = False
+        self._record_file = None
 
     def is_connected(self):
         with self._connection_lock:
@@ -49,7 +52,7 @@ class Serialhandler:
     def write(self, text):
         self._reader_thread.write(text.encode())
 
-    def connect(self, port_selection, *, line_hook=None):
+    def connect(self, port_selection):
         with self._connection_lock:
             if self._reader_thread is not None:
                 raise RuntimeError("serial already connected")
@@ -85,8 +88,12 @@ class Serialhandler:
                     logger.info('connection made')
 
                 def handle_line(self, line):
-                    if line_hook is not None:
-                        line_hook(line)
+                    # XXX: we should not record the raw stream but the
+                    # parsed data
+                    with serialhandler._recording_lock:
+                        if serialhandler._recording:
+                            serialhandler._record_file.write(line + "\n")
+
                     res = parse_line(line)
 
                     if res is not None:
@@ -111,15 +118,18 @@ class Serialhandler:
         self._reader_thread.start()
         self._reader_thread.connect()
 
-    def record_toggle(self):
+    @property
+    def recording(self):
+        with self._recording_lock:
+            return self._recording
 
-        if self.isRecording:
-            print('stop it recording: ', len(self.b), len(self.recorded_bytes))
+    def start_recording(self):
+        with self._recording_lock:
             timestr = time.strftime("%Y%m%d-%H%M%S")
-            self.fid = open('data_' + timestr + '.bin', 'ab')
-            self.fid.write(self.b)
-            self.fid.close()
-            self.isRecording = False
-        else:
-            print('start recording')
-            self.isRecording = True
+            self._recording = True
+            self._record_file = open('data_' + timestr + '.bin', 'a')
+
+    def stop_recording(self):
+        with self._recording_lock:
+            self._recording = False
+            self._record_file.close()
