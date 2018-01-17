@@ -7,7 +7,7 @@ Usage:
 
 from setuptools import setup
 
-APP = ['dashboard.py']
+APP = ['run.py']
 DATA_FILES = []
 OPTIONS = {}
 
