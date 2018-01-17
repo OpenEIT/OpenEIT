@@ -8,7 +8,7 @@ import tkinter
 
 import serial.tools.list_ports
 
-import OpenEIT.dashboard
+import openeit.dashboard
 
 import numpy
 
@@ -519,7 +519,7 @@ if __name__ == "__main__":
 
     args = ap.parse_args()
 
-    controller = OpenEIT.dashboard.Controller()
+    controller = openeit.dashboard.Controller()
     gui = Gui(controller)
     controller.configure(
         initial_port=args.port,
