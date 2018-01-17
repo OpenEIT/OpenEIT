@@ -501,8 +501,7 @@ class Gui(object):
         self.canvas.draw()
         self.canvas.flush_events()
 
-
-if __name__ == "__main__":
+def main():
     FORMAT = '%(asctime)-15s %(message)s'
     logging.basicConfig(format=FORMAT, level=logging.INFO)
     logger = logging.getLogger(__name__)
@@ -527,3 +526,6 @@ if __name__ == "__main__":
         virtual_tty=args.virtual_tty,
     )
     gui.run()
+
+if __name__ == "__main__":
+    main()
