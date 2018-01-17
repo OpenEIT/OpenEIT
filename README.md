@@ -28,6 +28,8 @@ Pip install each of the following: (i.e. pip install matplotlib)
 * numpy
 * imageio
 
+or run `pip install -r requirements.txt`
+
 ![alt text](images/dashboard.png "EIT Dashboard")
 
 ## Functionality
