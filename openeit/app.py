@@ -17,6 +17,9 @@ import matplotlib.pyplot as mpl
 matplotlib.use("TkAgg")
 # mpl.use('Qt4Agg')
 
+FORMAT = '%(asctime)-15s %(message)s'
+logging.basicConfig(format=FORMAT, level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # TODO: Improve State Feedback
 # The current connection and playback state should be clearly visible
@@ -28,7 +31,6 @@ class Gui(object):
     def __init__(self, controller):
 
         self.controller = controller
-
         self.root = tkinter.Tk()
         self.root.bind("<Destroy>", lambda _: controller.shutdown() or True)
         self.root.wm_title("EIT Test Bench Dashboard")
@@ -502,9 +504,6 @@ class Gui(object):
         self.canvas.flush_events()
 
 def main():
-    FORMAT = '%(asctime)-15s %(message)s'
-    logging.basicConfig(format=FORMAT, level=logging.INFO)
-    logger = logging.getLogger(__name__)
 
     ap = argparse.ArgumentParser()
 
