@@ -2,8 +2,8 @@ import logging
 import queue
 import os
 
-import openeit.reconstruction
-import openeit.backend
+import OpenEIT.reconstruction
+import OpenEIT.backend
 
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ class FilePlayback(PlaybackStrategy):
     def __init__(self, file_handle, controller):
         res = []
         for line in file_handle:
-            data = openeit.backend.parse_line(line)
+            data = OpenEIT.backend.parse_line(line)
             if data is not None:
                 res.append(data)
 
@@ -113,7 +113,7 @@ class Controller:
 
         # intialize the reconstruction worker
         self.image_pixels = 100
-        self.image_reconstruct = openeit.reconstruction.ReconstructionWorker(
+        self.image_reconstruct = OpenEIT.reconstruction.ReconstructionWorker(
             self.image_pixels,
             self._data_queue,
             self._image_queue
@@ -121,7 +121,7 @@ class Controller:
         self.image_reconstruct.start()
 
         # instanciate the serial handler
-        self.serial_handler = openeit.backend.SerialHandler(self._data_queue)
+        self.serial_handler = OpenEIT.backend.SerialHandler(self._data_queue)
 
         self.playback = None
 

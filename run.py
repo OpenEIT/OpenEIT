@@ -1,2 +1,2 @@
-from openeit import app
+from OpenEIT import app
 app.main()
