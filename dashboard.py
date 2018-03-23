@@ -1,21 +1,18 @@
 
+import sys
+import matplotlib
+matplotlib.use("TkAgg")
+from matplotlib import pyplot as plt
+
 import argparse
 import logging
 import queue
-import sys
 import time
 import tkinter
-
 import serial.tools.list_ports
-
 import OpenEIT.dashboard
-
 import numpy
-
-import matplotlib
-import matplotlib.pyplot as mpl
-matplotlib.use("TkAgg")
-# mpl.use('Qt4Agg')
+# plt.use('Qt4Agg')
 
 FORMAT = '%(asctime)-15s %(message)s'
 logging.basicConfig(format=FORMAT, level=logging.INFO)
@@ -62,8 +59,12 @@ class Gui(object):
         # make Esc exit the program
         self.root.bind('<Escape>', lambda e: self.root.destroy())
 
+        #### 
         # Matplotlibbing.
-        fig = mpl.Figure(figsize=(5, 4), dpi=100)
+        fig = plt.Figure(figsize=(5, 4), dpi=100)
+
+
+
         # pos = [left, bottom, width, height]
         image_position = [0.1, 0.25, 0.7, 0.7]
         histogram_position = [0.1, 0.08, 0.8, 0.1]
@@ -117,7 +118,7 @@ class Gui(object):
         self.plot = self.imageplt.imshow(self.img,
                                          interpolation='nearest',
                                          clim=[min_cbar, max_cbar])
-        self.cbar = mpl.colorbar(self.plot, cax=self.cbaxes)
+        self.cbar = plt.colorbar(self.plot, cax=self.cbaxes)
 
         self.canvas = matplotlib.backends.backend_tkagg.FigureCanvasTkAgg(
             fig,
@@ -136,7 +137,7 @@ class Gui(object):
         self.canvas._tkcanvas.pack(side=tkinter.TOP,
                                    fill=tkinter.BOTH,
                                    expand=1)
-        # canvas.mpl_connect('key_press_event', on_key_event)
+        # canvas.plt_connect('key_press_event', on_key_event)
         self.total_rendering_time = 0.0
         self.total_processing_time = 0.0
 
@@ -408,7 +409,7 @@ class Gui(object):
     def Eitwin(self):
         self.top = tkinter.Toplevel(master=self.root)
         self.top.title('EIT Reconstruction Window')
-        fig = mpl.Figure(figsize=(5, 4), dpi=100)
+        fig = plt.Figure(figsize=(5, 4), dpi=100)
         # pos = [left, bottom, width, height]
         image_position = [0.1, 0.25, 0.7, 0.7]
         colorbar_position = [0.85, 0.25, 0.03, 0.7]
@@ -446,9 +447,9 @@ class Gui(object):
         self.topplot = self.topimageplt.imshow(self.img-self._baseline,
                                                interpolation='nearest')
 
-        self.topcbar = mpl.colorbar(self.topplot,
+        self.topcbar = plt.colorbar(self.topplot,
                                     cax=self.topcbaxes)
-        # self.cbar = mpl.pyplot.colorbar(self.imageplt,cax = self.cbaxes)
+        # self.cbar = plt.pyplot.colorbar(self.imageplt,cax = self.cbaxes)
         scale_max = 90000
         min_cbar = 0
         max_cbar = scale_max
