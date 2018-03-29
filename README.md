@@ -1,6 +1,6 @@
 # EIT_Dashboard
 
-Electrical Impedance Tomography is a new way to image conductivity changes inside any mostly liquid medium - such as the human body. It's attractive as it doesn't use ionizing radiation like the X-rays used in a CATSCAN, and could be relatively cheap to mass produce. 
+Electrical Impedance Tomography is a way to image conductivity changes inside any mostly liquid medium - such as the human body. It doesn't use ionizing radiation like the X-rays used in a CATSCAN, and could be relatively cheap to mass produce. 
 
 This project is an example of a working system from PCB to firmware to reconstruction algorithm. Further work could certainly improve the resolution, but for now we have functionality in all sub sections. 
 
