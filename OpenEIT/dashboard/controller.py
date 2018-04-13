@@ -1,7 +1,6 @@
 import logging
 import queue
 import os
-
 import OpenEIT.reconstruction
 import OpenEIT.backend
 
@@ -36,7 +35,6 @@ class FilePlayback(PlaybackStrategy):
             data = OpenEIT.backend.parse_line(line)
             if data is not None:
                 res.append(data)
-
         self._file_data = res
         self._file_marker = 0
         self._queue = controller._data_queue
@@ -104,29 +102,26 @@ class Controller:
 
     def __init__(self):
         self._signal_connections = {}
-
         self.recording = False
 
         # setup the queues for the workers
         self._data_queue = queue.Queue()
         self._image_queue = queue.Queue()
 
-        # intialize the reconstruction worker
-        self.image_pixels = 100
-        self.image_reconstruct = OpenEIT.reconstruction.ReconstructionWorker(
-            self.image_pixels,
-            self._data_queue,
-            self._image_queue
-        )
-        self.image_reconstruct.start()
 
-        # instanciate the serial handler
+        # instantiate the serial handler
         self.serial_handler = OpenEIT.backend.SerialHandler(self._data_queue)
 
         self.playback = None
+        self._n_el = 8
+        self._algorithm ='bp'
+        self._mode='singlefrequency'
+        self._fwsequence='e_conf.txt'  
+
 
     def configure(self, *, initial_port=None, virtual_tty=False,
-                 read_file=False):
+                 read_file=False,n_el=8,algorithm='bp',mode='singlefrequency',fwsequence='e_conf.txt'):
+
         if initial_port is not None:
             if virtual_tty:
                 with open(initial_port, "r") as file_handle:
@@ -140,10 +135,53 @@ class Controller:
             else:
                 self.menuselect.set(initial_port)
                 self.connect()
+        # 
+        # 
+        self._n_el=n_el
+        self._algorithm=algorithm
+        self._mode=mode
+        self._fwsequence=fwsequence      
+
+        # 
+        # intialize the reconstruction worker
+        # This should be done, after the configuration file is parsed. 
+        # 
+        self.image_reconstruct = OpenEIT.reconstruction.ReconstructionWorker(
+            self._data_queue,
+            self._image_queue,
+            self._algorithm
+        )
+
+        self.x,self.y,self.tri,self.el_pos = self.image_reconstruct.get_plot_params()
+        if self._algorithm == 'greit':
+            self.gx,self.gy,self.ds = self.image_reconstruct.get_greit_params()  
+        self.image_reconstruct.start()
+
 
     @property
     def image_queue(self):
         return self._image_queue
+
+    @property
+    def n_el(self):
+        return self._n_el
+
+    @property
+    def algorithm(self):
+        return self._algorithm
+
+    def plot_params(self):
+        return self.x,self.y,self.tri,self.el_pos
+
+    def greit_params(self):
+        self.gx,self.gy,self.ds = self.image_reconstruct.get_greit_params() 
+        return self.gx,self.gy,self.ds   
+
+    def baseline(self,data):
+        self.image_reconstruct.baseline(data)
+
+    def reset_baseline(self):
+        self.image_reconstruct.reset_baseline()
 
     def register(self, signal, callable_):
         # TODO: supply a cookie for disconnecting
@@ -167,6 +205,7 @@ class Controller:
 
     def load_file(self, file_handle):
         self.disconnect()
+
         self.playback = FilePlayback(file_handle, self)
         self.emit("connection_state_changed", True)
 

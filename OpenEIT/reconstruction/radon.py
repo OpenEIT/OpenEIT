@@ -16,43 +16,9 @@ from skimage.transform import radon, iradon_sart
 logger = logging.getLogger(__name__)
 
 
-class ReconstructionWorker(threading.Thread):
-    """
-    A reconstruction worker thread.
 
-    When running it takes measurement data (as sequence of impedance
-    measurements) from `input_queue`, reconstructs the image data and
-    puts the reconstructed image to `output_queue`.
-    """
+class RadonReconstruction:
 
-    def __init__(self, image_pixels, input_queue, output_queue):
-        super().__init__(daemon=True)
-        self._input_queue = input_queue
-        self._output_queue = output_queue
-        self._running = True
-        self._reconstruction = Reconstruction(image_pixels)
-
-    def stop(self):
-        self._running = False
-
-    def run(self):
-        # TODO: add time tracking here!
-        while self._running:
-            data = self._input_queue.get()
-
-            # preprocess the data to exclude zero values
-            data = [1.0 if x == 0 else x for x in data]
-            try:
-                before = time.time()
-                img = self._reconstruction.eit_reconstruction(data)
-                logger.info("reconstruction time: %.2f", time.time() - before)
-            except RuntimeError as err:
-                logger.error('reconstruction error: %s', err)
-            else:
-                self._output_queue.put(img)
-
-
-class Reconstruction:
     """
     Reconstruction of image data from an EIT measurement.
 
@@ -61,10 +27,10 @@ class Reconstruction:
     transformation.
     """
 
-    def __init__(self, image_pixels):
+    def __init__(self):
         # problem, if I go down to say, 10, then some of the lines
         # aren't displayed.
-        self.image_pixels = image_pixels
+        self.image_pixels = 100
 
         self.img = np.zeros((self.image_pixels, self.image_pixels),
                             dtype=np.float)

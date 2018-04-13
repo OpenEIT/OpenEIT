@@ -9,4 +9,11 @@ Reconstruction of image data from raw data.
 
 # TODO: define an abstract interface for reconstruction algorithms.
 
-from .radon import ReconstructionWorker
+from .worker import ReconstructionWorker
+
+# for testing and debugging purposes below. 
+from .greit import GreitReconstruction
+from .pyeit import mesh 
+from .pyeit.eit.utils import eit_scan_lines
+from .pyeit.eit.greit import GREIT as greit
+from .pyeit.eit.fem import Forward

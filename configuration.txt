@@ -1,6 +1,8 @@
-n_el=32		  			 # 8 or 32. 	
-algorithm=jac 			 # greit, bp, jac, can be configured further in pyEIT for algorithm adjustments.
-mode=singlefrequency 	 # singlefrequency or multifrequency, changes dashboard choices. 
-fwsequence='e_conf.txt'  # file name for where electrode sequence is kept. Must parse bipolar and tetrapolar arrangements. 
+[hardware-config]
+n_el=32		  				
+[software-config]
+algorithm=bp
+mode=meshgui 	 
+fwsequence=e_conf.txt  
 
 
