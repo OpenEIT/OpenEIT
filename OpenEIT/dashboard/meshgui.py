@@ -89,8 +89,12 @@ class Meshgui(object):
         self.algorithm = self.controller.algorithm
         self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
 
+
+
         if self.algorithm == 'bp' or self.algorithm == 'jac':
-            self.img = numpy.zeros(680)
+            # problem is I hard coded based on number of electrodes. 
+            # 
+            self.img = numpy.zeros(self.x.shape[0])
             self.plot = self.imageplt.tripcolor(self.x,self.y, self.tri, self.img,
                  shading='flat', alpha=0.90, cmap=plt.cm.viridis,vmin=self.min_cbar,vmax=self.max_cbar)
             self.imageplt.set_aspect('equal')
@@ -106,7 +110,7 @@ class Meshgui(object):
             xv = self.gx[0]   
             yv = self.gy[:, 0] 
             image = self.img.reshape(self.gx.shape)         
-            fill = numpy.ones(680)
+            fill = numpy.ones(self.x.shape[0])
             self.plot = self.imageplt.pcolorfast(xv, yv, image, alpha=0.90, cmap=plt.cm.viridis,vmin=0,vmax=1)
             self.imageplt.tripcolor(self.x, self.y, self.tri, fill, alpha=0.10, cmap=plt.cm.gray,vmin=0, vmax=1)
             # draw electrodes. 
@@ -413,7 +417,7 @@ class Meshgui(object):
 
 
     def set_baseline(self):
-        self.controller.baseline(data)
+        self.controller.baseline()
         self.update_figure()
 
     def reset_baseline(self): # This sets baseline to what was originally stored in the background.txt file. 
@@ -455,7 +459,7 @@ class Meshgui(object):
 
         if self.algorithm == 'bp' or self.algorithm == 'jac':
             print ('bp in top plot')
-            self.img = numpy.zeros(680)
+            self.img = numpy.zeros(self.x.shape[0])
             self.topplot = self.topimageplt.tripcolor(self.x,self.y, self.tri, self.img,
                  shading='flat', alpha=0.90, cmap=plt.cm.viridis,vmin=self.min_cbar,vmax=self.max_cbar)
             self.topimageplt.set_aspect('equal')
@@ -466,7 +470,7 @@ class Meshgui(object):
             xv = self.gx[0]   
             yv = self.gy[:, 0] 
             image = self.img.reshape(self.gx.shape)         
-            fill = numpy.ones(680)
+            fill = numpy.ones(self.x.shape[0])
             self.topplot = self.topimageplt.pcolorfast(xv, yv, image, alpha=0.90, cmap=plt.cm.viridis,vmin=0,vmax=1)
             self.topimageplt.set_aspect('equal')
 

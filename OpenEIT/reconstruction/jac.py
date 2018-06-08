@@ -25,10 +25,11 @@ class JacReconstruction:
     Configurable wrapper to pyEIT 
 
     """
-    def __init__(self):
+    def __init__(self,n_el):
         # setup EIT scan conditions
         self.img = []
-        n_el = 32 # number of electrodes. 
+        self.baseline_flag = 0
+        n_el = n_el # number of electrodes. 
         # el_dist is distance between send and receive electrode. 
         # dist is the distance (number of electrodes) of A to B
         # in 'adjacent' mode, dist=1, in 'apposition' mode, dist=ne/2        
@@ -103,7 +104,8 @@ class JacReconstruction:
         return np.array(items)
 
     def update_reference(self,data):
-        self.f0 = data
+        # self.f0 = data
+        self.baseline_flag = 1
         # Write reference to file? 
         # filepath = 'background.txt'
         # with open(filepath, 'w') as file_handler:
@@ -137,6 +139,11 @@ class JacReconstruction:
             ds = self.eit.solve(f1, self.f0,normalize=False)
             ds_jac = sim2pts(self.pts, self.tri, ds)
             self.img = np.real(ds_jac)
+
+            if self.baseline_flag == 1: 
+                self.f0 = data
+                self.baseline_flag = 0 
+
 
         except RuntimeError as err:
             logger.error('reconstruction problem: %s', err)

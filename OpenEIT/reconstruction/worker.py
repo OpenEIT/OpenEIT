@@ -26,23 +26,24 @@ class ReconstructionWorker(threading.Thread):
     puts the reconstructed image to `output_queue`.
     """
 
-    def __init__(self, input_queue, output_queue,algorithm):
+    def __init__(self, input_queue, output_queue,algorithm,n_el):
         super().__init__(daemon=True)
-        self._input_queue = input_queue
-        self._output_queue = output_queue
-        self._running = True
-        self._algorithm = algorithm
+        self._input_queue   = input_queue
+        self._output_queue  = output_queue
+        self._running       = True
+        self._algorithm     = algorithm
 
         if self._algorithm == 'bp':
-            self._reconstruction = BpReconstruction()
+            self._reconstruction = BpReconstruction(n_el)
         elif self._algorithm  == 'greit':
-            self._reconstruction = GreitReconstruction()
+            self._reconstruction = GreitReconstruction(n_el)
         elif self._algorithm  == 'jac':
-            self._reconstruction = JacReconstruction()
+            self._reconstruction = JacReconstruction(n_el)
         else: # radon transform  
             self._reconstruction = RadonReconstruction()
 
-    def baseline(self,data):
+    def baseline(self):
+        data = np.array(self._input_queue.get())
         self._reconstruction.update_reference(data)
 
     def reset_baseline(self):
@@ -57,9 +58,12 @@ class ReconstructionWorker(threading.Thread):
         el_pos = self._reconstruction.el_pos
         return x,y,tri,el_pos
 
-    def get_greit_params(self):
 
+    def get_greit_params(self):
         return self._reconstruction.gx,self._reconstruction.gy,self._reconstruction.ds
+
+    def get_radon_params(self):
+        return 0
 
     def stop(self):
         self._running = False

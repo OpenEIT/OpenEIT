@@ -105,9 +105,8 @@ class Controller:
         self.recording = False
 
         # setup the queues for the workers
-        self._data_queue = queue.Queue()
+        self._data_queue  = queue.Queue()
         self._image_queue = queue.Queue()
-
 
         # instantiate the serial handler
         self.serial_handler = OpenEIT.backend.SerialHandler(self._data_queue)
@@ -137,22 +136,22 @@ class Controller:
                 self.connect()
         # 
         # 
-        self._n_el=n_el
+        self._n_el=int(n_el)
         self._algorithm=algorithm
         self._mode=mode
         self._fwsequence=fwsequence      
-
         # 
         # intialize the reconstruction worker
         # This should be done, after the configuration file is parsed. 
-        # 
         self.image_reconstruct = OpenEIT.reconstruction.ReconstructionWorker(
             self._data_queue,
             self._image_queue,
-            self._algorithm
+            self._algorithm,
+            self._n_el
         )
 
-        self.x,self.y,self.tri,self.el_pos = self.image_reconstruct.get_plot_params()
+        if self._algorithm == 'jac' or self._algorithm == 'bp': 
+            self.x,self.y,self.tri,self.el_pos = self.image_reconstruct.get_plot_params()
         if self._algorithm == 'greit':
             self.gx,self.gy,self.ds = self.image_reconstruct.get_greit_params()  
         self.image_reconstruct.start()
@@ -177,8 +176,9 @@ class Controller:
         self.gx,self.gy,self.ds = self.image_reconstruct.get_greit_params() 
         return self.gx,self.gy,self.ds   
 
-    def baseline(self,data):
-        self.image_reconstruct.baseline(data)
+    def baseline(self):
+
+        self.image_reconstruct.baseline()
 
     def reset_baseline(self):
         self.image_reconstruct.reset_baseline()
@@ -230,10 +230,12 @@ class Controller:
 
     def start_recording(self):
         if self.serial_handler.recording:
+            logger.info('it is already recording')
             return
 
         self.serial_handler.start_recording()
         self.emit("recording_state_changed", True)
+        logger.info('started recording here')
 
     def stop_recording(self):
         if not self.serial_handler.recording:
@@ -241,6 +243,7 @@ class Controller:
 
         self.serial_handler.stop_recording()
         self.emit("recording_state_changed", False)
+        logger.info('stopped recording here')
 
     def shutdown(self):
         # stop recording to flush the buffers

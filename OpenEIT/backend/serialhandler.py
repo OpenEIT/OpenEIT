@@ -92,9 +92,11 @@ class SerialHandler:
                     # parsed data
                     with serialhandler._recording_lock:
                         if serialhandler._recording:
+                            logger.info("this is within handle line serialhandler._recording")
                             serialhandler._record_file.write(line + "\n")
 
                     res = parse_line(line)
+                    logger.info('this is within handle line here')
 
                     if res is not None:
                         serialhandler._queue.put(res)
@@ -125,11 +127,13 @@ class SerialHandler:
 
     def start_recording(self):
         with self._recording_lock:
+            print('recording started!!')
             timestr = time.strftime("%Y%m%d-%H%M%S")
             self._recording = True
             self._record_file = open('data_' + timestr + '.bin', 'a')
 
     def stop_recording(self):
         with self._recording_lock:
+            print('recording stopped')
             self._recording = False
             self._record_file.close()

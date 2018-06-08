@@ -1,8 +1,8 @@
 [hardware-config]
-n_el=32		  				
+n_el=8		  				
 [software-config]
 algorithm=bp
-mode=meshgui 	 
+mode=meshgui
 fwsequence=e_conf.txt  
 
 

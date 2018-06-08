@@ -49,6 +49,12 @@ class BP(EitBase):
             vn = -(v1 - v0) / np.sign(self.v0)
         else:
             vn = (v1 - v0)
+        print (' v and H shapes ')
+        # How tid v get to be this shape? 
+        print (vn.shape)
+        print (v1.shape)
+        print(v0.shape) # 28... 
+        print (self.H.shape) # this one is 40 x 361? 
         # smearing
         ds = np.dot(self.H.transpose(), vn)
         return np.real(ds)
