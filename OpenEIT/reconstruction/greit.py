@@ -39,7 +39,7 @@ class GreitReconstruction:
         try:
             # Firmware match: 
             # This is also the ordering of the voltages coming in at each measurement. 
-            f = open('e_conf.txt')
+            f = open('e_conf_'+str(n_el)+'.txt')
             triplets=f.read().split()
             for i in range(0,len(triplets)):
                 triplets[i]=triplets[i].split(',')
@@ -58,14 +58,14 @@ class GreitReconstruction:
         """ 3. Set Up GREIT """
 
         self.eit = greit(self.mesh_obj,  self.el_pos, ex_mat=self.ex_mat, step=step, parser='std')
-        self.eit.setup(p=0.50, lamb=0.001,n=32)
+        self.eit.setup(p=0.50, lamb=0.001,n=n_el)
         logger.info("GREIT mesh set up ")
         print ('set up greit mesh')
 
         """ 3. Set Up default difference background """
         try: 
             # load up the reference background data. 
-            text_file = open("background.txt", "r")
+            text_file = open("background_"+str(n_el)+".txt", "r")
             lines = text_file.readlines()
             self.f0 = self.parse_line(lines[1])
             print ('loaded background reference')
@@ -109,7 +109,7 @@ class GreitReconstruction:
         return np.array(items)
 
     def update_reference(self,data):
-        print (data)
+        # print (data)
         self.baseline_flag = 1
         # self.f0 = data
         # Write reference to file?
@@ -123,7 +123,7 @@ class GreitReconstruction:
         """ reset the reference """
         try: 
             # load up the reference background data. 
-            text_file = open("background.txt", "r")
+            text_file = open("background_"+str(n_el)+".txt", "r")
             lines = text_file.readlines()
             self.f0 = self.parse_line(lines[1])
 
@@ -134,7 +134,6 @@ class GreitReconstruction:
             print ('resetting the reference')
             fwd = Forward(self.mesh_obj, self.el_pos) 
             self.f0 = fwd.solve_eit(self.ex_mat, step=step, perm=self.mesh_obj['perm'])
-
 
     def eit_reconstruction(self, data):
         """
@@ -148,7 +147,7 @@ class GreitReconstruction:
             ds = self.eit.solve(f1, self.f0,normalize=False)
             gx, gy, ds = self.eit.mask_value(ds, mask_value=np.NAN)
             self.img = np.real(ds)
-            if self.baseline_flag == 1 :
+            if self.baseline_flag == 1:
                 self.f0 = data
                 self.baseline_flag = 0 
 

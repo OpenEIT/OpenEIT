@@ -98,6 +98,11 @@ class Forward(object):
 
             # boundary measurements, subtract_row-voltages on electrodes
             diff_op = voltage_meter(ex_line, n_el=self.ne,step=step, parser=parser)
+            
+            # print ('ex_mat')
+            # print (ex_line)
+            # print (diff_op)
+
             v_diff = subtract_row(f_el, diff_op)
             jac_diff = subtract_row(jac_i, diff_op)
 

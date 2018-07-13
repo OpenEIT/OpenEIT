@@ -50,7 +50,7 @@ class BpReconstruction:
             # Firmware match: 
             if n_el == 32:
                 # This is also the ordering of the voltages coming in at each measurement. 
-                f = open('e_conf.txt')
+                f = open('e_conf_'+str(n_el)+'.txt')
                 triplets=f.read().split()
                 for i in range(0,len(triplets)):
                     triplets[i]=triplets[i].split(',')
@@ -88,7 +88,7 @@ class BpReconstruction:
         try: 
             if n_el == 32: 
                 # load up the reference background data. 
-                text_file = open("background_32.txt", "r")
+                text_file = open("background_"+str(n_el)+".txt", "r")
                 lines = text_file.readlines()
                 self.f0 = self.parse_line(lines[1])
             else: # This is if electrode are 8 in length. 

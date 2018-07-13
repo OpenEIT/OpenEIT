@@ -2,7 +2,6 @@
 import time
 import threading
 import logging
-
 import serial
 import serial.threaded
 

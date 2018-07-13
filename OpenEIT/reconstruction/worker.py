@@ -39,7 +39,7 @@ class ReconstructionWorker(threading.Thread):
             self._reconstruction = GreitReconstruction(n_el)
         elif self._algorithm  == 'jac':
             self._reconstruction = JacReconstruction(n_el)
-        else: # radon transform  
+        else: # radon transform here is for 8 electrodes only. 
             self._reconstruction = RadonReconstruction()
 
     def baseline(self):

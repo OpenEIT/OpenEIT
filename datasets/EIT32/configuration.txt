@@ -1,0 +1,8 @@
+[hardware-config]
+n_el=32		  				
+[software-config]
+algorithm=greit
+mode=meshygui
+fwsequence=e_conf_32.txt  
+
+
