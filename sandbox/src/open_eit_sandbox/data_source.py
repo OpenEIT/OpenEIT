@@ -85,7 +85,7 @@ class DataSource:
 
     def _connect_to_serial(self):
         ports = list(serial.tools.list_ports.comports())
-        port = [p[0] for p in ports if 'usbserial' in p[0]][0]
+        port = [p[0] for p in ports if 'usbserial' or 'usbmodem' in p[0]][0]
         baud_rate = 115200
         self.serial = serial.Serial(port, baud_rate)
 
