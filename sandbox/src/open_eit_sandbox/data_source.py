@@ -35,10 +35,10 @@ def _cleanup(value, last_valid_value):
             value = float(value)
         except ValueError:
             value = last_valid_value
-            print('Skipping value: %s' % value)
+            _LOGGER.debug('Skipping value: %s' % value)
     else:
         value = last_valid_value
-        print('No serial data')
+        _LOGGER.debug('No serial data')
     return value
 
 
