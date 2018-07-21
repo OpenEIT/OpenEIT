@@ -10,7 +10,7 @@ from scipy import signal
 
 # Logger
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.INFO)
+_LOGGER.setLevel(logging.DEBUG)
 _LOGGER.addHandler(logging.StreamHandler())
 
 # Filter params
@@ -118,6 +118,7 @@ class DataSource:
             # Update y
             if self.serial and not self.mock:
                 value = self.serial.readline()
+                _LOGGER.debug({'value': value})
             else:
                 value = random.random()
                 time.sleep(self.mock_data_interval)
