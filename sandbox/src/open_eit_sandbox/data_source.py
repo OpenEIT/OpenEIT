@@ -2,8 +2,10 @@ import logging
 import time
 import random
 import threading
+import serial
+
 from datetime import datetime
-import serial.tools.list_ports
+from serial.tools import list_ports
 
 import numpy as np
 from scipy import signal
@@ -40,6 +42,10 @@ def _cleanup(value, last_valid_value):
         value = last_valid_value
         _LOGGER.debug('No serial data')
     return value
+
+
+class DeviceNotFoundException(Exception):
+    pass
 
 
 class DataSource:
@@ -84,10 +90,14 @@ class DataSource:
         self.a, self.b = signal.butter(FILTER_ORDER, CUTOFF, btype=FILTER_TYPE)
 
     def _connect_to_serial(self):
-        ports = list(serial.tools.list_ports.comports())
-        port = [p[0] for p in ports if 'usbserial' or 'usbmodem' in p[0]][0]
-        baud_rate = 115200
-        self.serial = serial.Serial(port, baud_rate)
+        ports = [p[0] for p in list_ports.comports()]
+        valid_ports = [p for p in ports if 'usbserial' in p or 'usbmodem' in p]
+        if len(valid_ports) > 0:
+            port = valid_ports[0]
+            baud_rate = 115200
+            self.serial = serial.Serial(port, baud_rate)
+        else:
+            raise DeviceNotFoundException("OpenEIT board not found.")
 
     def _log_stats(self):
         elapsed_time = time.time() - self.start_time
