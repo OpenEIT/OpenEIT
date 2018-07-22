@@ -12,6 +12,8 @@ import serial.tools.list_ports
 import OpenEIT.dashboard
 import numpy
 import configparser
+from tkinter import *
+from tkinter.filedialog import askopenfilename
 # plt.use('Qt4Agg')
 # 
 logger = logging.getLogger(__name__)
@@ -87,13 +89,12 @@ class Meshgui(object):
         """
         self.n_el = self.controller.n_el
         self.algorithm = self.controller.algorithm
-        self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
-
+        # self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
 
 
         if self.algorithm == 'bp' or self.algorithm == 'jac':
-            # problem is I hard coded based on number of electrodes. 
-            # 
+            
+            self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
             self.img = numpy.zeros(self.x.shape[0])
             self.plot = self.imageplt.tripcolor(self.x,self.y, self.tri, self.img,
                  shading='flat', alpha=0.90, cmap=plt.cm.viridis,vmin=self.min_cbar,vmax=self.max_cbar)
@@ -107,16 +108,19 @@ class Meshgui(object):
         elif self.algorithm  == 'greit':
             self.gx,self.gy,self.ds = self.controller.greit_params()
             self.img = self.ds # numpy.zeros((32,32),dtype=float)
+
             xv = self.gx[0]   
             yv = self.gy[:, 0] 
             image = self.img.reshape(self.gx.shape)         
-            fill = numpy.ones(self.x.shape[0])
+            fill = numpy.ones(self.gx.shape[0])
+
             self.plot = self.imageplt.pcolorfast(xv, yv, image, alpha=0.90, cmap=plt.cm.viridis,vmin=0,vmax=1)
-            self.imageplt.tripcolor(self.x, self.y, self.tri, fill, alpha=0.10, cmap=plt.cm.gray,vmin=0, vmax=1)
+            # self.imageplt.tripcolor(self.x, self.y, self.tri, fill, alpha=0.10, cmap=plt.cm.gray,vmin=0, vmax=1)
+
             # draw electrodes. 
-            self.imageplt.plot(self.x[self.el_pos], self.y[self.el_pos], 'ro')
-            for i, e in enumerate(self.el_pos):
-                self.imageplt.text(self.x[e], self.y[e], str(i+1), size=12)
+            # self.imageplt.plot(self.gx[self.el_pos], self.gy[self.el_pos], 'ro')
+            # for i, e in enumerate(self.el_pos):
+            #     self.imageplt.text(self.gx[e], self.gy[e], str(i+1), size=12)
             self.imageplt.set_aspect('equal')
             self.cbar = plt.colorbar(self.plot, cax=self.cbaxes)
 
