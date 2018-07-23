@@ -422,7 +422,8 @@ class Meshgui(object):
 
     def set_baseline(self):
         self.controller.baseline()
-        self.update_figure()
+
+        # self.update_figure()
 
     def reset_baseline(self): # This sets baseline to what was originally stored in the background.txt file. 
         self.controller.reset_baseline()

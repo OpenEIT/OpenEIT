@@ -29,7 +29,7 @@ class JacReconstruction:
         # setup EIT scan conditions
         self.img = []
         self.baseline_flag = 0
-        n_el = n_el # number of electrodes. 
+        self.n_el = n_el # number of electrodes. 
         # el_dist is distance between send and receive electrode. 
         # dist is the distance (number of electrodes) of A to B
         # in 'adjacent' mode, dist=1, in 'apposition' mode, dist=ne/2        
@@ -116,7 +116,7 @@ class JacReconstruction:
     def reset_reference(self):
         try: 
             # load up the reference background data. 
-            text_file = open("background.txt", "r")
+            text_file = open("background_"+str(self.n_el)+".txt", "r")
             lines = text_file.readlines()
             self.f0 = self.parse_line(lines[1])
             print ('loaded default reference')

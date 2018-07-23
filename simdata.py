@@ -77,7 +77,7 @@ for i in range(length):
 
 	info = f1.v
 
-	print (f1.v.shape)
+	# print (f1.v.shape)
 
 	filepath = 'simdata.txt'
 	with open(filepath, 'a') as file_handler:
