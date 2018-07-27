@@ -32,7 +32,7 @@ class ReconstructionWorker(threading.Thread):
         self._output_queue  = output_queue
         self._running       = True
         self._algorithm     = algorithm
-
+        self._baseline      = 0 
         if self._algorithm == 'bp':
             self._reconstruction = BpReconstruction(n_el)
         elif self._algorithm  == 'greit':
@@ -43,8 +43,7 @@ class ReconstructionWorker(threading.Thread):
             self._reconstruction = RadonReconstruction()
 
     def baseline(self):
-        data = np.array(self._input_queue.get())
-        self._reconstruction.update_reference(data)
+        self._baseline = 1
 
     def reset_baseline(self):
         self._reconstruction.reset_reference()
@@ -57,7 +56,6 @@ class ReconstructionWorker(threading.Thread):
         y = pts[:, 1]
         el_pos = self._reconstruction.el_pos
         return x,y,tri,el_pos
-
 
     def get_greit_params(self):
         return self._reconstruction.gx,self._reconstruction.gy,self._reconstruction.ds
@@ -77,6 +75,11 @@ class ReconstructionWorker(threading.Thread):
             # 
             # preprocess the data to exclude zero values? 
             data = [1.0 if x == 0 else x for x in data]
+
+            if self._baseline == 1: 
+                self._reconstruction.update_reference(data)
+                self._baseline = 0
+
             try:
                 before = time.time()
                 img = self._reconstruction.eit_reconstruction(data)
