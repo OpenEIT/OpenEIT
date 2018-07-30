@@ -42,7 +42,7 @@ echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nf
 
 exec "$SHELL"
 pyenv install 3.6.2
-penv shell 3.6.2
+pyenv shell 3.6.2
 
 pip install -r requirements.txt
 
