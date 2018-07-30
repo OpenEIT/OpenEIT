@@ -150,8 +150,8 @@ class Controller:
             self._n_el
         )
 
-        # if self._algorithm == 'jac' or self._algorithm == 'bp': 
-        self.x,self.y,self.tri,self.el_pos = self.image_reconstruct.get_plot_params()
+        if self._algorithm == 'jac' or self._algorithm == 'bp': 
+            self.x,self.y,self.tri,self.el_pos = self.image_reconstruct.get_plot_params()
         if self._algorithm == 'greit':
             self.gx,self.gy,self.ds = self.image_reconstruct.get_greit_params()  
         self.image_reconstruct.start()
