@@ -13,6 +13,7 @@ python dashboard.py runs everything.
 If you don't have any of the dependencies installed you should look at the environment notes below and follow those instructions, otherwise the dashboard GUI should be ready to use. 
 
 ## Environment Notes: 
+### Mac
 This dashboard runs python 3.6 installed via anaconda integrated scientific computing environment. The only extra install is pyserial which you can install with the command 'conda install pyserial'
 
 If you don't want to install anaconda you can install the following packages:
@@ -29,6 +30,26 @@ Pip install each of the following: (i.e. pip install matplotlib)
 * imageio
 
 or run `pip install -r requirements.txt`
+
+### Linux
+```
+sudo apt-get install python-tk python3-tk tk-dev
+
+git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.bashrc
+
+exec "$SHELL"
+pyenv install 3.6.2
+penv shell 3.6.2
+
+pip install -r requirements.txt
+
+python dashboard.py
+
+
+```
 
 ![alt text](images/dashboard.png "EIT Dashboard")
 
