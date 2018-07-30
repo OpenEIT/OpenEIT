@@ -8,6 +8,7 @@ import logging
 import queue
 import time
 import tkinter
+import tkinter.messagebox
 import serial.tools.list_ports
 import OpenEIT.dashboard
 import numpy
@@ -257,9 +258,9 @@ class Singlefrequencygui(object):
             self.buttonconnect.pack(side=tkinter.RIGHT, padx=3, pady=ypadding)
         else:
             # no serial port detected.
-            self.text.setvalue("no serial port found, hope that's OK")
+            #self.text.setvalue("no serial port found, hope that's OK")
             logger.info(self.text)
-            tkinter.tkMessageBox.showwarning(
+            tkinter.messagebox.showwarning(
                 "No serial port",
                 "No device detected\nCheck cable and connection"
             )
