@@ -152,6 +152,6 @@ class GreitReconstruction:
                 self.baseline_flag = 0 
 
         except RuntimeError as err:
-            logger.error('reconstruction problem: %s', err)
+            logger.info('reconstruction problem: %s', err)
 
         return self.img # ready to plot 32,32 image. 

@@ -354,6 +354,7 @@ class Meshgui(object):
         # if top window exists.
         if self.top is not None:
             if self.top.winfo_exists():
+                print ("updating colorbar")
                 self.topplot.set_clim([self.min_cbar, self.max_cbar])
                 self.topcbar.update_normal(self.topplot)
 
@@ -384,7 +385,7 @@ class Meshgui(object):
             logger.debug('top window update')
 
             if self.algorithm == 'bp' or self.algorithm == 'jac':
-                print ('updating bp')
+                print ('updating top window')
                 # self.topplot = self.topimageplt.
                 self.topimageplt.tripcolor(self.x,self.y, self.tri, self.img,
                      shading='flat', alpha=0.90, cmap=plt.cm.viridis,vmin=self.min_cbar,vmax=self.max_cbar)
@@ -406,8 +407,10 @@ class Meshgui(object):
         self.total_rendering_time += (time.time() - start_time)
 
     def process_data(self):
+
         try:
             self.img = self.controller.image_queue.get_nowait()
+        
         except queue.Empty:
             pass
         else:
@@ -421,6 +424,7 @@ class Meshgui(object):
 
 
     def set_baseline(self):
+        
         self.controller.baseline()
 
         # self.update_figure()

@@ -52,7 +52,7 @@ class ReconstructionWorker(threading.Thread):
         mesh_obj = self._reconstruction.mesh_obj
         pts = mesh_obj['node']
         tri = mesh_obj['element']
-        x= pts[:, 0]
+        x = pts[:, 0]
         y = pts[:, 1]
         el_pos = self._reconstruction.el_pos
         return x,y,tri,el_pos
@@ -70,22 +70,18 @@ class ReconstructionWorker(threading.Thread):
         # TODO: add time tracking here!
         while self._running:
             data = np.array(self._input_queue.get())
-            # 
-            # this is going to be 928 long data pipe. 
-            # 
             # preprocess the data to exclude zero values? 
             data = [1.0 if x == 0 else x for x in data]
 
             if self._baseline == 1: 
                 self._reconstruction.update_reference(data)
                 self._baseline = 0
-
             try:
                 before = time.time()
                 img = self._reconstruction.eit_reconstruction(data)
                 logger.info("reconstruction time: %.2f", time.time() - before)
             except RuntimeError as err:
-                logger.error('reconstruction error: %s', err)
+                logger.info('reconstruction error: %s', err)
             else:
                 self._output_queue.put(img)
 
