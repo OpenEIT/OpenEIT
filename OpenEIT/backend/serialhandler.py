@@ -58,6 +58,8 @@ def parse_ble_line(line):
 
     return items
 
+
+
 class SerialHandler:
 
     def __init__(self, queue):
@@ -88,88 +90,6 @@ class SerialHandler:
 
     def write(self, text):
         self._reader_thread.write(text.encode())
-
-    def bleconnect(self):
-        # Clear any cached data because both bluez and CoreBluetooth have issues with
-        # caching data and it going stale.
-        self.ble.clear_cached_data()
-
-        # Get the first available BLE network adapter and make sure it's powered on.
-        adapter = self.ble.get_default_adapter()
-        adapter.power_on()
-        print('Using adapter: {0}'.format(adapter.name))
-
-        # Disconnect any currently connected UART devices.  Good for cleaning up and
-        # starting from a fresh state.
-        print('Disconnecting any connected UART devices...')
-        UART.disconnect_devices()
-
-        # Scan for UART devices.
-        print('Searching for UART device...')
-        try:
-            adapter.start_scan()
-            # Search for the first UART device found (will time out after 60 seconds
-            # but you can specify an optional timeout_sec parameter to change it).
-            device = UART.find_device()
-            if device is None:
-                raise RuntimeError('Failed to find UART device!')
-        finally:
-            # Make sure scanning is stopped before exiting.
-            adapter.stop_scan()
-
-        print('Connecting to device...')
-        device.connect()  # Will time out after 60 seconds, specify timeout_sec parameter
-                          # to change the timeout.
-        # Once connected do everything else in a try/finally to make sure the device
-        # is disconnected when done.
-        try:
-            # Wait for service discovery to complete for the UART service.  Will
-            # time out after 60 seconds (specify timeout_sec parameter to override).
-            print('Discovering services...')
-            UART.discover(device)
-
-            # Once service discovery is complete create an instance of the service
-            # and start interacting with it.
-            uart = UART(device)
-
-            return uart, device
-            # dis = DeviceInformation(device)
-            # Write a string to the TX characteristic.
-            # uart.write('Hello world!\r\n')
-            # print("Sent 'Hello world!' to the device.")
-            # print (dir(device))
-            def handle_line(data):
-          
-                b = data.decode() # change it to a string
-                if 'magnitudes' in b: 
-                    print ('packet start')
-                    self.get_line_lock = 1
-
-                with self._recording_lock:
-                    if self._recording:
-                        logger.info("this is within handle line serialhandler._recording")
-                        self._record_file.write(line + "\n")
-
-                if self.get_line_lock == 1:
-                    self.ble_line = self.ble_line + b 
-                    res = parse_ble_line(self.ble_line)
-                    if res is not None:
-                        self.ble_line = ''
-                        self._queue.put(res)
-
-                        device.disconnect()
-
-            while device.is_connected: 
-                # Now wait up to one minute to receive data from the device.
-                newdata=uart.read(timeout_sec=1)
-                handle_line(newdata)
-
-        finally:
-            print('device disconnecting')
-            # dis = DeviceInformation(device)
-            # Make sure device is disconnected on exit.
-            device.disconnect()
-
 
     def connect(self, port_selection):
         with self._connection_lock:
@@ -244,46 +164,117 @@ class SerialHandler:
                         if serialhandler._reader_thread is self:
                             serialhandler._reader_thread = None
 
-            class BLEReader(threading.Thread):
+            # class BLEReader(threading.Thread):
+            def blerun(self):
 
-                def handle_line(self,data):
-              
-                    b = data.decode() # change it to a string
-                    if 'magnitudes' in b: 
-                        print ('packet start')
-                        self.get_line_lock = 1
+                # Get the BLE provider for the current platform.
+                self.ble = Adafruit_BluefruitLE.get_provider()
+                self.ble.initialize()
+                
+                print ('inside ble run')
+                # Clear any cached data because both bluez and CoreBluetooth have issues with
+                # caching data and it going stale.
+                self.ble.clear_cached_data()
+                print ('cleared the cache')
+                # Get the first available BLE network adapter and make sure it's powered on.
+                adapter = self.ble.get_default_adapter()
+                adapter.power_on()
+                print('Using adapter: {0}'.format(adapter.name))
 
-                    with self._recording_lock:
-                        if self._recording:
-                            logger.info("this is within handle line serialhandler._recording")
-                            self._record_file.write(line + "\n")
+                # Disconnect any currently connected UART devices.  Good for cleaning up and
+                # starting from a fresh state.
+                print('Disconnecting any connected UART devices...')
+                UART.disconnect_devices()
 
-                    if self.get_line_lock == 1:
-                        self.ble_line = self.ble_line + b 
-                        res = parse_ble_line(self.ble_line)
-                        if res is not None:
-                            self.ble_line = ''
-                            self._queue.put(res)
+                # Scan for UART devices.
+                print('Searching for UART device...')
+                try:
+                    adapter.start_scan()
+                    # Search for the first UART device found (will time out after 60 seconds
+                    # but you can specify an optional timeout_sec parameter to change it).
+                    device = UART.find_device()
+                    if device is None:
+                        raise RuntimeError('Failed to find UART device!')
+                finally:
+                    # Make sure scanning is stopped before exiting.
+                    adapter.stop_scan()
 
-                            device.disconnect()
+                print('Connecting to device...')
+                device.connect()  # Will time out after 60 seconds, specify timeout_sec parameter
+                                  # to change the timeout.
+                # Once connected do everything else in a try/finally to make sure the device
+                # is disconnected when done.
+                try:
+                    # Wait for service discovery to complete for the UART service.  Will
+                    # time out after 60 seconds (specify timeout_sec parameter to override).
+                    print('Discovering services...')
+                    UART.discover(device)
 
-                def runble(self,device,uart):
+                    # Once service discovery is complete create an instance of the service
+                    # and start interacting with it.
+                    uart = UART(device)
+
+                    # return uart, device
+                    # dis = DeviceInformation(device)
+                    # Write a string to the TX characteristic.
+                    # uart.write('Hello world!\r\n')
+                    # print("Sent 'Hello world!' to the device.")
+                    # print (dir(device))
+                    def handle_line(data):
+                  
+                        b = data.decode() # change it to a string
+                        if 'magnitudes' in b: 
+                            print ('packet start')
+                            self.get_line_lock = 1
+
+                        with self._recording_lock:
+                            if self._recording:
+                                logger.info("this is within handle line serialhandler._recording")
+                                self._record_file.write(line + "\n")
+
+                        if self.get_line_lock == 1:
+                            self.ble_line = self.ble_line + b 
+                            res = parse_ble_line(self.ble_line)
+                            if res is not None:
+                                self.ble_line = ''
+                                self._queue.put(res)
+                                # device.disconnect()
+
                     while device.is_connected: 
                         # Now wait up to one minute to receive data from the device.
                         newdata=uart.read(timeout_sec=1)
                         handle_line(newdata)
+
+                finally:
+                    print('device disconnecting')
+                    # dis = DeviceInformation(device)
+                    # Make sure device is disconnected on exit.
+                    device.disconnect()
 
 
             if 'Bluetooth' in port_selection: 
                 print('Bluetooth option')
                 # 
                 # separate out the connection from the line reader? 
-                # 
-                # self._reader_thread = threading.Thread(target=runble,args=[]device)
+
+                # self._reader_thread = threading.Thread(target=blefunc, args=(self.ble,))
                 # self._reader_thread.start()
 
-                self._reader_thread = threading.Thread(target=self.ble.run_mainloop_with(self.bleconnect))
+                # self._reader_thread = BLEThread(self.ble).start()
+
+                # self._reader_thread = self.ble.run_mainloop_with(blerun)
+
+                self._reader_thread = threading.Thread(target=blerun, args=(self,))
                 self._reader_thread.start()
+
+                # 
+                # self._reader_thread = serial.threaded.ReaderThread(
+                #     self.ble,
+                #     BLEReader
+                # )
+
+                # self._reader_thread = BLEReader()
+                # self._reader_thread.start()
 
             else: 
                 self._reader_thread = serial.threaded.ReaderThread(
