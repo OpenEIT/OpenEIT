@@ -13,6 +13,8 @@ from .worker import ReconstructionWorker
 
 # for testing and debugging purposes below. 
 from .greit import GreitReconstruction
+from .jac import JacReconstruction
+from .bp import BpReconstruction
 from .pyeit import mesh 
 from .pyeit.eit.utils import eit_scan_lines
 from .pyeit.eit.greit import GREIT as greit

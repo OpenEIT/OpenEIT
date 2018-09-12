@@ -57,15 +57,15 @@ class BpReconstruction:
                 A=np.array(triplets, dtype=np.uint8)
                 self.ex_mat = np.unique(A[:,0:2],axis=0)
                 logger.info("read electrode configuration")
-                print (self.ex_mat)
+                #print (self.ex_mat)
             else: 
                 self.ex_mat = eit_scan_lines(n_el, el_dist)
-                print ('8 electrode option')
-                print (self.ex_mat)
+                #print ('8 electrode option')
+                #print (self.ex_mat)
         except RuntimeError as err:
             logger.error('e_conf file config error: %s', err)
             self.ex_mat = eit_scan_lines(n_el, el_dist)
-            print (self.ex_mat)
+            #print (self.ex_mat)
 
         """ 0. construct mesh """
         # h0 is initial mesh size. , h0=0.1
@@ -73,9 +73,6 @@ class BpReconstruction:
         
         # print("ex mat")
         # print (self.ex_mat)
-
-        
-
         """ 3. Set Up BP """
         try: 
             self.eit =  bp(self.mesh_obj,  self.el_pos, ex_mat=self.ex_mat, step=step, parser='std')
@@ -97,8 +94,8 @@ class BpReconstruction:
                 self.f0 = self.parse_line(lines[1])
                 # fwd = Forward(self.mesh_obj, self.el_pos) 
                 # self.f0 = fwd.solve_eit(self.ex_mat, step=step, perm=self.mesh_obj['perm']).v
-                print ('f0 information: ')
-                print (self.f0.shape) # 40? 
+                #print ('f0 information: ')
+                #print (self.f0.shape) # 40? 
                 # print (self.f0) # why is this none? 
         except RuntimeError as err:
             logger.error('background file config error: %s', err)
@@ -158,24 +155,20 @@ class BpReconstruction:
 
         """
         try: 
-            print ('size of info')
+            #print ('size of info')
 
             # data contains fl.v and f0.v 
             f1 = np.array(data)
-            print (len(data))
-            print (self.f0.shape) # f0 is 928 in size. ?? // it's f0 that is wrong...
-            print (f1.shape)
+            #print (len(data))
+            #print (self.f0.shape) # f0 is 928 in size. ?? // it's f0 that is wrong...
+            #print (f1.shape)
             # if the jacobian is not normalized, data may not to be normalized too.
             ds_bp = self.eit.solve(f1, self.f0, normalize=False)
             self.img = np.real(ds_bp)
 
             if self.baseline_flag == 1 :
-                    self.f0 = data
-                    # filepath = 'background2.txt'
-                    # with open(filepath, 'w') as file_handler:
-                    #     file_handler.write("\nmagnitudes : ")
-                    #     for item in data:
-                    #         file_handler.write( (str(item)+',' ) )
+                    print ("baseline thing")
+                    self.f0 = np.array(data)
                     self.baseline_flag = 0 
 
         except RuntimeError as err:

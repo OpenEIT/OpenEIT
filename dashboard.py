@@ -6,17 +6,21 @@ import argparse
 import logging
 import OpenEIT.dashboard
 import configparser
+import Adafruit_BluefruitLE
 
 FORMAT = '%(asctime)-15s %(message)s'
 logging.basicConfig(format=FORMAT, level=logging.INFO)
 logger = logging.getLogger(__name__)
 # 
+# Get the BLE provider for the current platform.
+ble = Adafruit_BluefruitLE.get_provider()
+
+    
 # TODO: Improve State Feedback
 # The current connection and playback state should be clearly visible
 # at all times
 # Test all buttons and functions with the device and flag any problems. 
 # Create a way to select the reconstruction algorithm. 
-# 
 # 
 def main():
 
@@ -28,7 +32,6 @@ def main():
     algorithm   = configParser.get('software-config', 'algorithm')
     mode        = configParser.get('software-config', 'mode')
     fwsequence  = configParser.get('software-config', 'fwsequence')    
-
 
     ap = argparse.ArgumentParser()
 
@@ -70,4 +73,5 @@ def main():
 
 
 if __name__ == "__main__":
+
     main()

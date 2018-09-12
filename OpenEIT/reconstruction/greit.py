@@ -10,7 +10,6 @@ import itertools
 import time
 import threading
 import numpy as np
-
 from .pyeit import mesh 
 from .pyeit.eit.utils import eit_scan_lines
 from .pyeit.eit.greit import GREIT as greit
@@ -58,7 +57,10 @@ class GreitReconstruction:
         """ 3. Set Up GREIT """
 
         self.eit = greit(self.mesh_obj,  self.el_pos, ex_mat=self.ex_mat, step=step, parser='std')
-        self.eit.setup(p=0.50, lamb=0.001,n=n_el)
+        
+        self.eit.setup(p=0.50, lamb=0.5,n=n_el)
+
+
         logger.info("GREIT mesh set up ")
         print ('set up greit mesh')
 

@@ -1,8 +1,8 @@
 [hardware-config]
-n_el=8		  				
+n_el=32		  				
 [software-config]
-algorithm=radon
-mode=singlefrequencygui
-fwsequence=e_conf.txt  
+algorithm=jac
+mode=meshgui
+fwsequence=e_conf_32.txt  
 
 

@@ -57,8 +57,9 @@ class JacReconstruction:
         """ 3. Set Up JAC """
         try: 
             self.eit = jac(self.mesh_obj,  self.el_pos, ex_mat=self.ex_mat, step=step, perm=1., parser='std')
+            
             # parameter tuning is needed for better EIT images
-            self.eit.setup(p=0.5, lamb=0.1, method='kotre')
+            self.eit.setup(p=0.5, lamb=0.5, method='kotre')
 
             logger.info("JAC mesh set up ")
             print ('set up greit mesh')
