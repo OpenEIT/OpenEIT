@@ -134,15 +134,12 @@ class Controller:
             else:
                 self.menuselect.set(initial_port)
                 self.connect()
-        # 
-        # 
+
         self._n_el=int(n_el)
         self._algorithm=algorithm
         self._mode=mode
         self._fwsequence=fwsequence      
-        # 
-        # intialize the reconstruction worker
-        # This should be done, after the configuration file is parsed. 
+ 
         self.image_reconstruct = OpenEIT.reconstruction.ReconstructionWorker(
             self._data_queue,
             self._image_queue,

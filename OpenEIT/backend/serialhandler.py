@@ -135,7 +135,7 @@ class SerialHandler:
                 def connection_made(self, transport):
                     serialhandler._connected = True
                     super().connection_made(transport)
-                    logger.info('connection made')
+                    logger.info('connection made now')
 
                 def handle_line(self, line):
                     # XXX: we should not record the raw stream but the
@@ -146,8 +146,9 @@ class SerialHandler:
                             serialhandler._record_file.write(line + "\n")
 
                     res = parse_line(line)
-                
+                    # logger.info(res)
                     if res is not None:
+
                         serialhandler._queue.put(res)
 
                 def connection_lost(self, exc):
