@@ -1,7 +1,7 @@
 [hardware-config]
 n_el=32		  				
 [software-config]
-algorithm=jac
+algorithm=greit
 mode=meshgui
 fwsequence=e_conf_32.txt  
 
