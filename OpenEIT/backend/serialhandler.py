@@ -8,8 +8,6 @@ import uuid
 import Adafruit_BluefruitLE
 from Adafruit_BluefruitLE.services import UART
 
-
-
 # Define service and characteristic UUIDs used by the UART service.
 UART_SERVICE_UUID = uuid.UUID('6E400001-B5A3-F393-E0A9-E50E24DCCA9E')
 TX_CHAR_UUID      = uuid.UUID('6E400002-B5A3-F393-E0A9-E50E24DCCA9E')
@@ -17,6 +15,35 @@ RX_CHAR_UUID      = uuid.UUID('6E400003-B5A3-F393-E0A9-E50E24DCCA9E')
 
 logger = logging.getLogger(__name__)
 
+def parse_bis_line(line):  # this parses a bioimpedance spectroscopy line.
+    # 200,500,800,1000,2000,5000,8000,10000,15000,20000,30000,40000,50000,60000,70000  
+    try:  # take only data after magnitudes. 
+        _, data = line.split(":", 1)
+    except ValueError:
+        return None
+    items = []
+    for item in data.split(";"):
+        item = item.strip()
+        if not item:
+            continue
+        try:
+            items.append(float(item))
+        except ValueError:
+            return None
+    return items
+
+def parse_timeseries(line):  # this parses time series data.  
+    items = []
+    for item in line.split(","):
+        item = item.strip()
+        if not item:
+            continue
+        try:
+            items.append(float(item))
+        except ValueError:
+            return None
+
+    return items
 
 def parse_line(line):  # this parses a whole line, i.e. 928 values at once. 
     try:  # take only data after magnitudes. 
@@ -58,19 +85,17 @@ def parse_ble_line(line):
 
     return items
 
-
-
 class SerialHandler:
 
-    def __init__(self, queue):
+    def __init__(self, queue,data_type):
         self._connection_lock = threading.Lock()
         self._reader_thread = None
         self._queue = queue
         self._recording_lock = threading.Lock()
         self._recording = False
         self._record_file = None
-        
-        # Get the BLE provider for the current platform.
+        self._data_type = data_type
+        # Get the BLE provider for the current  platform.
         self.ble = Adafruit_BluefruitLE.get_provider()
 
     def is_connected(self):
@@ -145,10 +170,17 @@ class SerialHandler:
                             logger.info("this is within handle line serialhandler._recording")
                             serialhandler._record_file.write(line + "\n")
 
-                    res = parse_line(line)
+                    # parse line based on different input data types. 
+                    if self._data_type == 'a': 
+                        res = parse_timeseries(line)
+                    elif self._data_type == 'b':
+                        res = parse_bis_line(line)
+                    else: 
+                        res = parse_line(line)
+                    
+
                     # logger.info(res)
                     if res is not None:
-
                         serialhandler._queue.put(res)
 
                 def connection_lost(self, exc):
@@ -241,7 +273,15 @@ class SerialHandler:
 
                                 if self.get_line_lock == 1:
                                     self.ble_line = self.ble_line + b 
-                                    res = parse_ble_line(self.ble_line)
+
+                                    # parse line based on different input data types. 
+                                    if self._data_type == 'a': 
+                                        res = parse_timeseries(self.ble_line)
+                                    elif self._data_type == 'b':
+                                        res = parse_bis_line(self.ble_line)
+                                    else: 
+                                        res = parse_ble_line(self.ble_line)
+
                                     if res is not None:
                                         self.ble_line = ''
                                         self._queue.put(res)

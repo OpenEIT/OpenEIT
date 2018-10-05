@@ -1,6 +1,6 @@
 
-import matplotlib
-matplotlib.use("TkAgg")
+# import matplotlib
+# matplotlib.use("TkAgg")
 
 import argparse
 import logging
@@ -57,19 +57,32 @@ def main():
         fwsequence=fwsequence
     )
 
-    # Gui type based on config file. 
-    if mode == 'timeseriesygui':
+    if controller.choice == 'a':
+        # Timeseries GUI 
         gui = OpenEIT.dashboard.Timeseriesgui(controller)
         gui.run()
-    elif mode == 'multifrequencygui':
-        gui = OpenEIT.dashboard.Multifrequencygui(controller) 
+    elif controller.choice == 'b':
+        # Bioimpedance Spectroscopy GUI using plotly and dash. 
+        gui = OpenEIT.dashboard.BISgui(controller)
         gui.run()
-    elif mode == 'meshgui':
-        gui = OpenEIT.dashboard.Meshgui(controller) 
-        gui.run()        
     else: 
-        gui = OpenEIT.dashboard.Singlefrequencygui(controller)
-        gui.run()
+        # Tomographic reconstruction GUI 
+        gui = OpenEIT.dashboard.Tomogui(controller)
+        gui.run()        
+
+    # Gui type based on config file. 
+    # if mode == 'timeseriesygui':
+    #     gui = OpenEIT.dashboard.Timeseriesgui(controller)
+    #     gui.run()
+    # elif mode == 'multifrequencygui':
+    #     gui = OpenEIT.dashboard.Multifrequencygui(controller) 
+    #     gui.run()
+    # elif mode == 'meshgui':
+    #     gui = OpenEIT.dashboard.Meshgui(controller) 
+    #     gui.run()        
+    # else: 
+    #     gui = OpenEIT.dashboard.Singlefrequencygui(controller)
+    #     gui.run()
 
 
 if __name__ == "__main__":

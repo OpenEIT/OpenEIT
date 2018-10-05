@@ -4,8 +4,20 @@ import os
 import OpenEIT.reconstruction
 import OpenEIT.backend
 
+import dash
+from dash.dependencies import Output, Event
+import dash_core_components as dcc
+import dash_html_components as html
+import plotly.plotly as py
+import plotly.graph_objs as go
+from flask import request
+#logger = logging.getLogger(__name__)
 
-logger = logging.getLogger(__name__)
+PORT = 8050
+
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.DEBUG) # or DEBUG
+_LOGGER.addHandler(logging.StreamHandler())
 
 
 class PlaybackStrategy:
@@ -97,6 +109,110 @@ class VirtualSerialPortPlayback(PlaybackStrategy):
             return True
         return False
 
+class DashSelector(object):
+    """
+
+    This creates a selection screen for which GUI to load. 
+
+    """
+    def __init__(self):
+        self.choice = 'z'
+
+    def shutdown_server(self):
+        func = request.environ.get('werkzeug.server.shutdown')
+        if func is None:
+            raise RuntimeError('Not running with the Werkzeug Server')
+        func()    
+
+    def run(self):
+
+        app = dash.Dash()
+        
+        app.css.config.serve_locally = True
+        app.scripts.config.serve_locally = True
+
+        app.layout = html.Div( [
+                html.Link(
+                    rel='stylesheet',
+                    href='/static/stylesheet.css'
+                ),
+
+
+                # dcc.Interval(id='refresh', interval=200),
+                html.Div( [
+                    html.H1('Open EIT'),
+                ], style={'width': '100%', 'display': 'inline-block','text-align': 'center'} ) ,
+
+                html.Div( [
+
+                    html.Div( [
+                    html.Button(children='Time Series', id='timegui', type='submit'),
+                    ], style={'width': '30%', 'display': 'inline-block','text-align': 'center'} ),
+
+                    html.Div( [
+                    html.Button(children='Bioimpedance Spectroscopy', id='bisgui', type='submit'),
+                    ] , style={'width': '30%', 'display': 'inline-block','text-align': 'center'}),
+
+                    html.Div( [
+                    html.Button(children='Tomographic Reconstruction', id='tomogui', type='submit'),
+                    ] , style={'width': '30%', 'display': 'inline-block','text-align': 'center'}),
+
+
+                ], style={'width': '100%', 'display': 'inline-block'} ),
+
+                html.Div(id = 'secret1',children=''),
+                html.Div(id = 'secret2',children=''),
+                html.Div(id = 'secret3',children=''),
+            ] )     
+                
+
+        @app.server.route('/static/<path:path>')
+        def static_file(path):
+            static_folder = os.path.join(os.getcwd(), 'static')
+            return send_from_directory(static_folder, path)
+
+        @app.callback( 
+        dash.dependencies.Output('secret1','children'),
+        [dash.dependencies.Input('timegui', 'n_clicks')])
+        def callback_dropdown(n_clicks):          
+            if n_clicks is not None:
+                self.choice = 'a'
+                print('shutting down')                
+                shutdown()
+            return self.choice
+
+        @app.callback( 
+        dash.dependencies.Output('secret2','children'),
+        [dash.dependencies.Input('bisgui', 'n_clicks')])
+        def callback_dropdown(n_clicks):         
+            if n_clicks is not None:
+                self.choice = 'b'
+                print('shutting down')
+                shutdown()
+            return self.choice
+
+        @app.callback( 
+        dash.dependencies.Output('secret3','children'),
+        [dash.dependencies.Input('tomogui', 'n_clicks')])
+        def callback_dropdown(n_clicks):
+            if n_clicks is not None:
+                self.choice = 'c'
+                print('shutting down')                
+                shutdown()
+            return self.choice    
+
+        @app.server.route('/shutdown', methods=['POST'])
+        def shutdown():
+            #shutdown_server()
+            func = request.environ.get('werkzeug.server.shutdown')
+            if func is None:
+                raise RuntimeError('Not running with the Werkzeug Server')
+            func()    
+            return 'Server shutting down...'   
+
+        # _LOGGER.debug('App running at: http://localhost:%s' % PORT)
+        app.run_server(port=PORT)
+     
 
 class Controller:
 
@@ -108,8 +224,17 @@ class Controller:
         self._data_queue  = queue.Queue()
         self._image_queue = queue.Queue()
 
-        # instantiate the serial handler
-        self.serial_handler = OpenEIT.backend.SerialHandler(self._data_queue)
+        # 
+        # run a dash app to pick which kind of data to expect. 
+        dash = DashSelector()
+        dash.run()
+
+        print ('the dash choice was: ')
+        print (dash.choice )
+
+        self.choice = dash.choice
+        # instantiate the serial handler. It should be instantiated knowing what sort of data it is expecting. 
+        self.serial_handler = OpenEIT.backend.SerialHandler(self._data_queue,dash.choice)
 
         self.playback = None
         self._n_el = 8
@@ -157,6 +282,10 @@ class Controller:
     @property
     def image_queue(self):
         return self._image_queue
+
+    @property
+    def data_queue(self):
+        return self._data_queue
 
     @property
     def n_el(self):

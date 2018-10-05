@@ -1,506 +1,390 @@
-
-import sys
-import matplotlib
-matplotlib.use("TkAgg")
-from matplotlib import pyplot as plt
-import argparse
 import logging
-import queue
-import time
-import tkinter
+import os
+import dash
+from dash.dependencies import Output, Event
+import dash_core_components as dcc
+import dash_html_components as html
+import plotly.plotly as py
+import plotly.graph_objs as go
+from flask import send_from_directory
 import serial.tools.list_ports
 import OpenEIT.dashboard
-import numpy
-import configparser
-# plt.use('Qt4Agg')
-# 
-# FORMAT = '%(asctime)-15s %(message)s'
-# logging.basicConfig(format=FORMAT, level=logging.INFO)
-logger = logging.getLogger(__name__)
+import queue
+import time
+from datetime import datetime, timedelta
+import numpy as np
+from scipy import signal
 
-# TODO: Improve State Feedback
-# The current connection and playback state should be clearly visible
-# at all times
-# Read from Config
-# enable 3 different GUI options. 
-# 
-# 
-# 
+
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.DEBUG)
+_LOGGER.addHandler(logging.StreamHandler())
+
+PORT = 8050
+S_TO_MS = 1000
+PLOT_REFRESH_INTERVAL = 0.5 * S_TO_MS
+
+
+DATA_OUTPUT_DIR = 'data'
+BUFFER_SIZE = 500
+NSPERG = 256
+DT_FORMAT = '%y-%m-%d %H:%M:%S.%f'
+# Filter params
+FILTER_ORDER = 1
+SAMPLING_FREQUENCY = 25.0
+FILTER_WINDOW_SIZE = 20
+F_NYQUIST = 0.5 * SAMPLING_FREQUENCY
+FILTER_TYPE = 'low'
+CUTOFF_FREQUENCY = 3.0
+CUTOFF = CUTOFF_FREQUENCY / F_NYQUIST
+
+
+# Suppress unnecessary debug / warning messages from Flask
+os.environ['FLASK_ENV'] = 'development'
+flask_logger = logging.getLogger('werkzeug')
+flask_logger.setLevel(logging.INFO)
+
+
+
+def _clean_value(value, value_history):
+    if len(value_history) > 0:
+        last_valid_value = value_history[-1]
+    else:
+        last_valid_value = None
+
+    if value:
+        try:
+            value = value
+        except ValueError:
+            value = last_valid_value
+            _LOGGER.debug('Skipping value: %s' % value)
+    else:
+        value = last_valid_value
+        _LOGGER.debug('No serial data')
+    return value
+
+
+def _format_timestamp_to_string(timestamp):
+    """
+    Input timestamp can be:
+    - Epoch time or counter
+    - Datetime
+    """
+    if type(timestamp) == datetime:
+        return timestamp.strftime(DT_FORMAT)
+    else:
+        return str(timestamp)
+
+
+def _read_string_timestamp(str_timestamp):
+    """
+    Input string timestamp can be:
+    - Epoch time or counter (E.g. '250') --> can be cast to int
+    - Formatted datetime (E.g. '2018-12-01 12:05:04') --> cannot be cast to int
+    """
+    try:
+        timestamp = int(str_timestamp)
+    except ValueError:
+        timestamp = datetime.strptime(str_timestamp, DT_FORMAT)
+    return timestamp
+
+class DeviceNotFoundException(Exception):
+    pass
+
 class Timeseriesgui(object):
 
     def __init__(self, controller):
 
         self.controller = controller
-        self.root = tkinter.Tk()
-        self.root.bind("<Destroy>", lambda _: controller.shutdown() or True)
-        self.root.wm_title("EIT Test Bench Dashboard")
-        self.top = None
-        self.topplot = None
-        self.topcanvas = None
-        self.topcbar = None
-        self.topcbaxes = None
-
-        menu = tkinter.Menu(self.root)
-        self.root.config(menu=menu)
-
-        filemenu = tkinter.Menu(menu)
-        menu.add_cascade(label="File", menu=filemenu)
-        filemenu.add_command(label="Exit", command=self.root.quit)
-        viewmenu = tkinter.Menu(menu)
-        menu.add_cascade(label="View", menu=viewmenu)
-        viewmenu.add_command(label="Dedicated Reconstruction Window",
-                             command=self.Eitwin)
-        viewmenu.add_separator()
-        viewmenu.add_command(label="something else",
-                             command=self.Something_else)
-        helpmenu = tkinter.Menu(menu)
-        menu.add_cascade(label="Help", menu=helpmenu)
-        helpmenu.add_command(label="About...",
-                             command=self.About)
-
-        self.root.protocol("WM_DELETE_WINDOW", self.quit)
-        # make Esc exit the program
-        self.root.bind('<Escape>', lambda e: self.root.destroy())
-
-        #### 
-        # Matplotlibbing.
-        fig = plt.Figure(figsize=(5, 4), dpi=100)
-
-        # pos = [left, bottom, width, height]
-        image_position = [0.1, 0.25, 0.7, 0.7]
-        histogram_position = [0.1, 0.08, 0.8, 0.1]
-        colorbar_position = [0.85, 0.25, 0.03, 0.7]
-        self.imageplt = fig.add_axes(image_position)
-        self.histplt = fig.add_axes(histogram_position)
-        self.cbaxes = fig.add_axes(colorbar_position)
-
-        # 180,225,270,315,0,45,90,135
-        # 1,2,3,4,5,6,7,8
-        # Add text for electrode locations.
-        self.imageplt.annotate('180d(AFE1)',
-                               xy=(0.4, 0.9),
-                               xycoords='axes fraction')
-        self.imageplt.annotate('225d(AFE2)',
-                               xy=(0.15, 0.75),
-                               xycoords='axes fraction')
-        self.imageplt.annotate('270d(AFE3)',
-                               xy=(0.0, 0.5),
-                               xycoords='axes fraction')
-        self.imageplt.annotate('315d(AFE4)',
-                               xy=(0.2, 0.2),
-                               xycoords='axes fraction')
-        self.imageplt.annotate('0d(AFE5)',
-                               xy=(0.5, 0.1),
-                               xycoords='axes fraction')
-        self.imageplt.annotate('45d(AFE6)',
-                               xy=(0.75, 0.25),
-                               xycoords='axes fraction')
-        self.imageplt.annotate('90d(AFE7)',
-                               xy=(0.9, 0.5),
-                               xycoords='axes fraction')
-        self.imageplt.annotate('135d(AFE8)',
-                               xy=(0.8, 0.8),
-                               xycoords='axes fraction')
-
-        ypadding = 10
-
-        # Will this often need to be changed?
-        scale_max = 90000
-        self.sliders = [-100, scale_max, -100, scale_max]
-
-        min_cbar = 0
-        max_cbar = scale_max
-        scale_tick_interval = float(scale_max/10)
-
-        N = self.controller.image_pixels
-        self._baseline = numpy.zeros((N, N), dtype=numpy.float)
-        self.img = self._baseline
-
-        self.plot = self.imageplt.imshow(self.img,
-                                         interpolation='nearest',
-                                         clim=[min_cbar, max_cbar])
-        self.cbar = plt.colorbar(self.plot, cax=self.cbaxes)
-
-        self.canvas = matplotlib.backends.backend_tkagg.FigureCanvasTkAgg(
-            fig,
-            master=self.root
+        self.controller.register(
+            "recording_state_changed",
+            self.on_record_state_changed
         )
 
-        self.canvas.show()
-        self.canvas.get_tk_widget().pack(side=tkinter.TOP,
-                                         fill=tkinter.BOTH,
-                                         expand=1)
-        toolbar = matplotlib.backends.backend_tkagg.NavigationToolbar2TkAgg(
-            self.canvas,
-            self.root
+        self.controller.register(
+            "connection_state_changed",
+            self.on_connection_state_changed
         )
-        toolbar.update()
-        self.canvas._tkcanvas.pack(side=tkinter.TOP,
-                                   fill=tkinter.BOTH,
-                                   expand=1)
-        # canvas.plt_connect('key_press_event', on_key_event)
-        self.total_rendering_time = 0.0
-        self.total_processing_time = 0.0
+        self.connected      = False
+        self.recording      = False 
+        self.currentport    = ''
+        full_ports          = list(serial.tools.list_ports.comports())
+        self.portnames      = [item[0] for item in full_ports]
 
-        # ---------------
-        # defining frames
-        # ---------------
-        bottomframe0 = tkinter.Frame(self.root)
-        bottomframe1 = tkinter.Frame(self.root)
-        bottomframe2 = tkinter.Frame(self.root)
-        bottomframe3 = tkinter.Frame(self.root)
+        self.canned_data_interval = 1/SAMPLING_FREQUENCY
+        self.tdelta = timedelta(seconds=self.canned_data_interval)
+        # Filtered data True or False. 
+        self.filter_data = True #filter_data
+        self.a, self.b = signal.butter(FILTER_ORDER, CUTOFF, btype=FILTER_TYPE)
+        self.y_filtered = []
+        self.sliding_window = np.zeros(FILTER_WINDOW_SIZE)  # Window to filter
+        # Stats
+        self.nb_points = 0
+        self.start_time = time.time()
+        # Time series
+        self.buffer_size = BUFFER_SIZE
+        self.x = []
+        self.y = []
+        # PSD
+        self.freqs = []
+        self.psd = []
 
-        bottomframe0.pack(side=tkinter.TOP)
-        bottomframe1.pack(side=tkinter.TOP)
-        bottomframe2.pack(side=tkinter.TOP)
-        bottomframe3.pack(side=tkinter.TOP)
+    def _log_stats(self):
+        elapsed_time = time.time() - self.start_time
+        sampling_rate = self.nb_points / elapsed_time
+        stats = {
+            'elapsed_time': elapsed_time,
+            'nb_points': self.nb_points,
+            'sampling_rate': sampling_rate
+        }
+        _LOGGER.debug(stats)
 
-        # This is the text box...
-        self._text = tkinter.StringVar()
-        self.msg = tkinter.Label(
-            bottomframe0,
-            bg="light cyan", textvariable=self._text
-        )
-        self.msg.pack(fill="x", expand=True)
+    # Get's new data off the serial port. 
+    def process_data(self):
+        y_batch = []
+        # get data off the stack. 
+        while not self.controller.data_queue.empty():
+            y_batch = self.controller.data_queue.get()
 
-        # sliders.
-        self.w1 = tkinter.Scale(bottomframe0, from_=self.sliders[0],
-                                to=self.sliders[1], length=600,
-                                tickinterval=scale_tick_interval,
-                                orient=tkinter.HORIZONTAL,
-                                label='MIN',
-                                command=self.update_cbar)
-        self.w1.set(scale_max/10)
-        self.w1.pack(fill="x", expand=True)
-        self.w2 = tkinter.Scale(bottomframe0, from_=self.sliders[2],
-                                to=self.sliders[3], length=600,
-                                tickinterval=scale_tick_interval,
-                                orient=tkinter.HORIZONTAL,
-                                label='MAX',
-                                command=self.update_cbar)
-        self.w2.set(9*scale_max/10)
-        self.w2.pack(fill="x", expand=True)
+        t       = datetime.now()
+        value   = y_batch
+    
+        for i in range(len(y_batch)):
+            value   = y_batch[i]
+            t       = t + self.tdelta
 
-        # Text entry boxes for min and max range of each slider bar.
-        cbarbut = tkinter.Button(bottomframe0, text='Update HIST',
-                                 command=self.update_hist)
-        cbarbut.pack(side=tkinter.RIGHT, padx=3, pady=ypadding)
+            value = _clean_value(value,self.y)
 
-        self.min_slider_l = tkinter.Entry(bottomframe0)
-        self.min_slider_h = tkinter.Entry(bottomframe0)
-        self.max_slider_l = tkinter.Entry(bottomframe0)
-        self.max_slider_h = tkinter.Entry(bottomframe0)
-        self.max_slider_h.pack(side=tkinter.RIGHT, padx=3, pady=ypadding)
-        self.max_slider_h_label = tkinter.Label(bottomframe0, text="max_h:")
-        self.max_slider_h_label.pack(side=tkinter.RIGHT)
-        self.max_slider_l.pack(side=tkinter.RIGHT, padx=3, pady=ypadding)
-        self.max_slider_l_label = tkinter.Label(bottomframe0, text="max_l:")
-        self.max_slider_l_label.pack(side=tkinter.RIGHT)
-        self.min_slider_h.pack(side=tkinter.RIGHT, padx=3, pady=ypadding)
-        self.min_slider_h_label = tkinter.Label(bottomframe0, text="min_h:")
-        self.min_slider_h_label.pack(side=tkinter.RIGHT)
-        self.min_slider_l.pack(side=tkinter.RIGHT, padx=3, pady=ypadding)
-        self.min_slider_l_label = tkinter.Label(bottomframe0, text="min_l:")
-        self.min_slider_l_label.pack(side=tkinter.RIGHT)
-        self.min_slider_l.bind("<Return>", self.evaluate)
-        self.min_slider_h.bind("<Return>", self.evaluate)
-        self.max_slider_l.bind("<Return>", self.evaluate)
-        self.max_slider_h.bind("<Return>", self.evaluate)
+            if value:
+                self.y.append(value)
+                if len(self.y) > self.buffer_size:
+                    self.y.pop(0)
 
-        full_ports = list(serial.tools.list_ports.comports())
-        portnames = [item[0] for item in full_ports]
+            # Update sliding window
+            new_window = np.append(self.sliding_window[1:], value)
+            self.sliding_window = new_window
 
-        if len(portnames) > 0:
-            self.menuselect = tkinter.StringVar(self.root)
-            self.menuselect.set(portnames[0])
-            listboxdataconnect = tkinter.OptionMenu(
-                *(self.root, self.menuselect) + tuple(portnames)
-            )
+             # Update y_filtered
+            if self.filter_data:
+                results = signal.lfilter(self.a, self.b, self.sliding_window)
+                result = results[-1]
+                self.y_filtered.append(result)
+                if len(self.y_filtered) > self.buffer_size:
+                    self.y_filtered.pop(0)
 
-            listboxdataconnect.pack(in_=bottomframe1,
-                                    side=tkinter.LEFT,
-                                    padx=3, pady=ypadding)
-
-            self.reset_baselinebut = tkinter.Button(
-                master=bottomframe1,
-                text="Reset Baseline",
-                command=self.reset_baseline
-            )
-            self.reset_baselinebut.pack(side=tkinter.RIGHT,
-                                        padx=3, pady=ypadding)
-
-            self.baselinebut = tkinter.Button(master=bottomframe1,
-                                              text="Baseline",
-                                              command=self.set_baseline)
-            self.baselinebut.pack(side=tkinter.RIGHT, padx=3, pady=ypadding)
-
-            self.recorddata = tkinter.Button(
-                master=bottomframe1, text='Record',
-                command=self.controller.start_recording
-            )
-            self.recorddata.pack(side=tkinter.RIGHT, padx=3, pady=ypadding)
-            self.controller.register(
-                "recording_state_changed",
-                self.on_record_state_changed
-            )
-
-            self.buttonconnect = tkinter.Button(
-                master=bottomframe1, text='Connect',
-                command=self.connect
-            )
-            self.controller.register(
-                "connection_state_changed",
-                self.on_connection_state_changed
-            )
-            self.buttonconnect.pack(side=tkinter.RIGHT, padx=3, pady=ypadding)
-        else:
-            # no serial port detected.
-            self.text.setvalue("no serial port found, hope that's OK")
-            logger.info(self.text)
-            tkinter.tkMessageBox.showwarning(
-                "No serial port",
-                "No device detected\nCheck cable and connection"
-            )
-
-        resetfilebut = tkinter.Button(bottomframe2, text='Reset File Marker',
-                                      command=self.controller.reset_file)
-        resetfilebut.pack(side=tkinter.RIGHT, padx=3, pady=ypadding)
-
-        readfilerunbut = tkinter.Button(bottomframe2, text='Run',
-                                        command=self.run_file)
-        readfilerunbut.pack(side=tkinter.RIGHT, padx=3, pady=ypadding)
-
-        readfilebackbut = tkinter.Button(bottomframe2, text='Step Back',
-                                         command=self.controller.step_file_back)
-        readfilebackbut.pack(side=tkinter.RIGHT, padx=3, pady=ypadding)
-
-        readfilestartbut = tkinter.Button(bottomframe2, text='Step',
-                                          command=self.controller.step_file)
-        readfilestartbut.pack(side=tkinter.RIGHT, padx=3, pady=ypadding)
-
-        readfilebut = tkinter.Button(bottomframe2, text='Read from File',
-                                     command=self.load_file)
-        readfilebut.pack(side=tkinter.RIGHT, padx=3, pady=ypadding)
-
-        self.text = 'hi'
-
-        self.root.after(10, self.process_data)
-
-    @property
-    def text(self):
-        return self._text.get()
-
-    @text.setter
-    def text(self, value):
-        self._text.set(value)
+            # Update PSD
+            nsperg = NSPERG
+            if len(self.y) < NSPERG:
+                nsperg = len(self.y)
+            self.freqs, self.psd = signal.welch(self.y,
+                                                nperseg=nsperg,
+                                                fs=SAMPLING_FREQUENCY)
+            # Update x
+            self.x.append(t)
+            if len(self.x) > self.buffer_size:
+                self.x.pop(0)
+        
+        # Log some stats about the data
+        # self._log_stats()     
 
     def run(self):
-        self.root.mainloop()
 
-    def connect(self):
-        self.controller.connect(self.menuselect.get())
+        app = dash.Dash()
+        app.css.config.serve_locally = True
+        app.scripts.config.serve_locally = True
+        app.layout = html.Div( [
+                html.Link(
+                    rel='stylesheet',
+                    href='/static/stylesheet.css'
+                ),
+
+
+                html.Div( [
+                    html.Div( [
+                    # the button controls      
+                    dcc.Dropdown(
+                        id='name-dropdown',
+                        options=[{'label':name, 'value':name} for name in self.portnames],
+                        placeholder = 'Select Port',
+                        value = self.portnames[0]
+                        ),
+                    ], style={'width': '60%', 'display': 'inline-block','text-align': 'center'} ),
+
+                    html.Div( [
+                    html.Button(children='Connect', id='connectbutton', type='submit'),
+                    ], style={'width': '15%', 'display': 'inline-block','text-align': 'center'} ),
+
+                    html.Div( [
+                    html.Button(children='Save Current Spectrum', id='savebutton', type='submit'),
+                    ] , style={'width': '15%', 'display': 'inline-block','text-align': 'center'}),
+
+                ], style={'width': '100%', 'display': 'inline-block'} ),
+
+                dcc.Graph(
+                    id='live-update-time-series',
+                    animate=False,
+                    config={
+                        'displayModeBar': False
+                    }
+                ),
+                dcc.Graph(
+                    id='live-update-psd',
+                    animate=False,
+                    config={
+                        'displayModeBar': False
+                    }
+                ),
+                dcc.Interval(
+                    id='interval-component',
+                    interval=PLOT_REFRESH_INTERVAL
+                ),
+
+
+
+
+                # html.Div([
+                    # html.P(id='connectbuttoncall',children='connectbuttoncall'),
+                #     html.P(id='savebuttoncall',children='savebuttoncall'),
+                # ], style={'width': '100%', 'display': 'inline-block'})
+            
+            ] )      
+
+        @app.server.route('/static/<path:path>')
+        def static_file(path):
+            static_folder = os.path.join(os.getcwd(), 'static')
+            return send_from_directory(static_folder, path)
+
+        @app.callback( 
+            dash.dependencies.Output('savebutton', 'children'),
+            [dash.dependencies.Input('savebutton', 'n_clicks')])
+        def callback_dropdown(n_clicks):
+            if n_clicks is not None:
+                try: 
+                    if self.recording == False:
+                        print('start recording')
+                        self.controller.start_recording()
+                    else:
+                        print ('stop recording')
+                        self.controller.stop_recording()
+                except: 
+                    print('could not record')
+                    self.recording = False 
+            if self.recording is True: 
+                return 'Stop Recording' 
+            else:
+                return 'Record'
+
+
+        @app.callback(
+            dash.dependencies.Output(component_id='connectbutton', component_property='children'),
+            [dash.dependencies.Input(component_id='connectbutton', component_property='n_clicks'),
+            dash.dependencies.Input(component_id='name-dropdown', component_property='value')]
+        )
+        def connect(n_clicks, dropdown_value):
+            if n_clicks is not None:
+                try: 
+                    if self.connected == False:
+                        print('connect')
+                        self.controller.connect(str(dropdown_value))
+                    else:
+                        print('disconnect')
+                        self.controller.disconnect()
+                except: 
+                    print('could not connect, is the device plugged in?')
+                    self.connected = False 
+            if self.connected is True: 
+                return 'Disconnect' 
+            else:
+                return 'Connect'
+         
+        @app.callback(Output('live-update-time-series', 'figure'),
+                      events=[Event('interval-component', 'interval')])
+        def update_graph_scatter():
+            # update from the data queue. 
+            self.process_data()
+
+            if len(self.x) > 0:
+                trace1 = go.Scatter(
+                    x=self.x,
+                    y=self.y,
+                    mode='lines',
+                    name='Data',
+                    # line={'shape': 'spline'}
+                )
+
+                data = [trace1]
+
+                if len(self.y_filtered) > 0:
+                    trace2 = go.Scatter(
+                        x=self.x,
+                        y=self.y_filtered,
+                        mode='lines',
+                        name='Filtered Data',
+                        # line={'shape': 'spline'}
+                    )
+                    data.append(trace2)
+
+                x_min = min(self.x)
+                x_max = max(self.x)
+                y_min = min(self.y)
+                y_max = max(self.y)
+
+                layout = go.Layout(
+                    title='Time Series Data',
+                    xaxis=dict(
+                        title='Time',
+                        range=[x_min, x_max]
+                    ),
+                    yaxis=dict(
+                        title='Impedance (ohms)',
+                        range=[y_min, y_max]
+                    )
+                )
+
+                return {'data': data, 'layout': layout}
+
+        @app.callback(Output('live-update-psd', 'figure'),
+                      events=[Event('interval-component', 'interval')])
+        def update_graph_scatter():
+            if len(self.x) > 0:
+                trace1 = go.Scatter(
+                    x=self.freqs,
+                    y=self.psd,
+                    mode='lines',
+                    name='PSD',
+                    line={'shape': 'spline'},
+                    fill='tozeroy'
+                )
+
+                data = [trace1]
+
+                layout = go.Layout(
+                    title='Power Spectrum Density',
+                    xaxis=dict(
+                        title='Frequency (Hz)',
+                        type='log',
+                        autorange=True
+                    ),
+                    yaxis=dict(
+                        title='Power (dB)',
+                        autorange=True
+                    )
+                )
+
+                return {'data': data, 'layout': layout}
+        #         
+        # _LOGGER.debug('App running at: http://localhost:%s' % PORT)
+        app.run_server(port=PORT)
 
     def on_connection_state_changed(self, connected):
         if connected:
-            self.buttonconnect.config(
-                text='Disconnect',
-                command=self.controller.disconnect
-            )
+            self.connected = True
         else:
-            self.buttonconnect.config(
-                text='Connect',
-                command=self.connect
-            )
+            self.connected = False 
 
     def on_record_state_changed(self, recording):
         if recording:
-            self.recorddata.config(
-                text="Stop Recording",
-                command=self.controller.stop_recording,
-            )
+            self.recording = True
         else:
-            self.recorddata.config(
-                text="Record",
-                command=self.controller.start_recording,
-            )
+            self.recording = False 
 
-    def update_cbar(self, *args):
-        # update the color bar with the min/maxes set as the slider.
-        # Try to update this on the toplevel axes if they exist, as
-        # well.
-
-        # get slider values.
-        min_cbar = self.w1.get()
-        max_cbar = self.w2.get()
-        if min_cbar >= max_cbar:
-            self.text = 'min has to be less than max for this to work.'
-            logger.info(self.text)
-            return
-
-        # redraw the cbar with new limits
-        self.plot.set_clim([min_cbar, max_cbar])
-        self.cbar.update_normal(self.plot)
-
-        # if top window exists.
-        if self.top is not None:
-            if self.top.winfo_exists():
-                self.topplot.set_clim([min_cbar, max_cbar])
-                self.topcbar.update_normal(self.topplot)
-
-        self.update_figure()
-
-    def update_figure(self):
-        start_time = time.time()
-
-        if self.top is None or not self.top.winfo_exists():
-            # check if top window is open.
-            self.plot.set_array(self.img-self._baseline)
-
-            self.canvas.draw()
-            self.canvas.flush_events()
-        else:
-            # If the top window is enabled, use it instead for updates.
-            logger.debug('top window update')
-            self.topplot.set_array(self.img-self._baseline)
-            self.topcanvas.draw()
-            self.topcanvas.flush_events()
-
-        self.total_rendering_time += (time.time() - start_time)
-
-    def process_data(self):
-        try:
-            self.img = self.controller.image_queue.get_nowait()
-        except queue.Empty:
-            pass
-        else:
-            logger.info("rendering new image ...")
-            before = time.time()
-            self.update_figure()
-            self.text = 'render time: %.2f' % (
-                time.time() - before)
-            logger.info(self.text)
-        self.root.after(10, self.process_data)
-
-    def set_baseline(self):
-        self._baseline = self.img
-        self.update_figure()
-
-    def reset_baseline(self):
-        N = self.controller.image_pixels
-        self._baseline = numpy.zeros((N, N), dtype=numpy.float)
-        self.update_figure()
-
-    def load_file(self):
-        file_handle = tkinter.filedialog.askopenfile()
-
-        if file_handle is None:
-            return
-
-        with file_handle:
-            self.controller.load_file(file_handle)
-
-    def run_file(self):
-        if self.controller.step_file():
-            self.root.after(10, self.run_file)
-
-
-    def About(self):
-        print('Open Source Biomedical Imaging Project')
-
-    def Eitwin(self):
-        self.top = tkinter.Toplevel(master=self.root)
-        self.top.title('EIT Reconstruction Window')
-        fig = plt.Figure(figsize=(5, 4), dpi=100)
-        # pos = [left, bottom, width, height]
-        image_position = [0.1, 0.25, 0.7, 0.7]
-        colorbar_position = [0.85, 0.25, 0.03, 0.7]
-        self.topimageplt = fig.add_axes(image_position)
-        self.topcbaxes = fig.add_axes(colorbar_position)
-
-        # 180,225,270,315,0,45,90,135
-        # 1,2,3,4,5,6,7,8
-        # Add text for electrode locations.
-        self.topimageplt.annotate('180d(AFE1)',
-                                  xy=(0.4, 0.9),
-                                  xycoords='axes fraction')
-        self.topimageplt.annotate('225d(AFE2)',
-                                  xy=(0.15, 0.75),
-                                  xycoords='axes fraction')
-        self.topimageplt.annotate('270d(AFE3)',
-                                  xy=(0.0, 0.5),
-                                  xycoords='axes fraction')
-        self.topimageplt.annotate('315d(AFE4)',
-                                  xy=(0.2, 0.2),
-                                  xycoords='axes fraction')
-        self.topimageplt.annotate('0d(AFE5)',
-                                  xy=(0.5, 0.1),
-                                  xycoords='axes fraction')
-        self.topimageplt.annotate('45d(AFE6)',
-                                  xy=(0.75, 0.25),
-                                  xycoords='axes fraction')
-        self.topimageplt.annotate('90d(AFE7)',
-                                  xy=(0.9, 0.5),
-                                  xycoords='axes fraction')
-        self.topimageplt.annotate('135d(AFE8)',
-                                  xy=(0.8, 0.8),
-                                  xycoords='axes fraction')
-
-        self.topplot = self.topimageplt.imshow(self.img-self._baseline,
-                                               interpolation='nearest')
-
-        self.topcbar = plt.colorbar(self.topplot,
-                                    cax=self.topcbaxes)
-        # self.cbar = plt.pyplot.colorbar(self.imageplt,cax = self.cbaxes)
-        scale_max = 90000
-        min_cbar = 0
-        max_cbar = scale_max
-        self.topcbar.set_clim([min_cbar, max_cbar])
-        #
-        self.topcanvas = matplotlib.backends.backend_tkagg.FigureCanvasTkAgg(
-            fig,
-            master=self.top
-        )
-        self.topcanvas.show()
-        self.topcanvas.get_tk_widget().pack(side=tkinter.TOP,
-                                            fill=tkinter.BOTH,
-                                            expand=1)
-        toolbar = matplotlib.backends.backend_tkagg.NavigationToolbar2TkAgg(
-            self.topcanvas,
-            self.top
-        )
-        toolbar.update()
-        self.topcanvas._tkcanvas.pack(side=tkinter.TOP,
-                                      fill=tkinter.BOTH,
-                                      expand=1)
-
-    def Something_else(self):
-        print('menu item')
-
-    def quit(self):
-        self.root.quit()     # stops mainloop
-        self.root.destroy()  # this is necessary on Windows to prevent
-        # Fatal Python Error: PyEval_RestoreThread: NULL tstate
-        sys.exit()
-
-    def evaluate(self, event):
-        sliders = [self.min_slider_l.get(), self.min_slider_h.get(),
-                   self.max_slider_l.get(), self.max_slider_h.get()]
-        i = 0
-        for value in sliders:
-            if value != "":
-                self.sliders[i] = int(value)
-            i = i+1
-        logger.debug('slider values', self.sliders)
-        # # re-initialize the sliders ranges.
-        self.w1.configure(from_=self.sliders[0], to=self.sliders[1])
-        self.w2.configure(from_=self.sliders[2], to=self.sliders[3])
-
-    def update_hist(self):
-        # self.plot.set_array(self.img - self._baseline)
-        self.histplt.cla()
-        flatimg = (self.img - self._baseline).flatten()
-        n, bins, patches = self.histplt.hist(flatimg,
-                                             bins='auto',
-                                             facecolor='g')
-        self.canvas.draw()
-        self.canvas.flush_events()
