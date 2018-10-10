@@ -33,7 +33,7 @@ layout = html.Div([html.H3('Hello, world!')])
 ```
 * Edit `dashboard/components/modes/__init__.py` and add information about the new mode. Example:
 ```python
-# dashboard/components/modes/__inti__.py
+# dashboard/components/modes/__init__.py
 
 ...
 from components.modes import my_mode
