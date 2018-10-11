@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 # Get the BLE provider for the current platform.
 ble = Adafruit_BluefruitLE.get_provider()
 
-    
 # TODO: Improve State Feedback
 # The current connection and playback state should be clearly visible
 # at all times
@@ -57,32 +56,8 @@ def main():
         fwsequence=fwsequence
     )
 
-    if controller.choice == 'a':
-        # Timeseries GUI 
-        gui = OpenEIT.dashboard.Timeseriesgui(controller)
-        gui.run()
-    elif controller.choice == 'b':
-        # Bioimpedance Spectroscopy GUI using plotly and dash. 
-        gui = OpenEIT.dashboard.BISgui(controller)
-        gui.run()
-    else: 
-        # Tomographic reconstruction GUI 
-        gui = OpenEIT.dashboard.Tomogui(controller)
-        gui.run()        
-
-    # Gui type based on config file. 
-    # if mode == 'timeseriesygui':
-    #     gui = OpenEIT.dashboard.Timeseriesgui(controller)
-    #     gui.run()
-    # elif mode == 'multifrequencygui':
-    #     gui = OpenEIT.dashboard.Multifrequencygui(controller) 
-    #     gui.run()
-    # elif mode == 'meshgui':
-    #     gui = OpenEIT.dashboard.Meshgui(controller) 
-    #     gui.run()        
-    # else: 
-    #     gui = OpenEIT.dashboard.Singlefrequencygui(controller)
-    #     gui.run()
+    gui = OpenEIT.dashboard.runGui(controller)
+    gui.run()
 
 
 if __name__ == "__main__":
