@@ -94,7 +94,7 @@ class runGui(object):
                         print ('we got here')
                         layout = html.Div([html.H3(mode.name), self.time_serieslayout ])
                     else:
-                        layout = html.Div([html.H3(mode.name), self.imaginglayout])
+                        layout = html.Div([self.imaginglayout])
 
             return layout
 
