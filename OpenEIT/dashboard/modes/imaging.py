@@ -5,12 +5,15 @@ from dash.dependencies import Output, Event
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.plotly as py
+from plotly.graph_objs import *
 import plotly.graph_objs as go
+import plotly.figure_factory as FF
 import matplotlib.cm as cm
 from flask import send_from_directory
 import serial.tools.list_ports
 import OpenEIT.dashboard
 import queue
+import numpy
 
 PORT = 8050
 S_TO_MS = 1000
@@ -33,6 +36,9 @@ class Tomogui(object):
         self.controller = controller
         self.app 		= app 
 
+        self.n_el = self.controller.n_el
+        self.algorithm = self.controller.algorithm
+
         self.controller.register(
             "recording_state_changed",
             self.on_record_state_changed
@@ -54,14 +60,30 @@ class Tomogui(object):
         self.data_dict = {}
         self.data_dict = dict(zip(self.freqs, self.psd))
 
+        if self.algorithm  == 'greit':
+            self.gx,self.gy,self.ds = self.controller.greit_params()
+            self.img = self.ds # numpy.zeros((32,32),dtype=float)
+        else: 
+            self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
+            self.img = numpy.zeros(self.x.shape[0]) 
+
     # Get's new data off the serial port. 
     def process_data(self):
-        while not self.controller.data_queue.empty():
-            f,amp = self.controller.data_queue.get()
-            self.data_dict[f] = amp
 
-        self.freqs = list(self.data_dict.keys())
-        self.psd   = list(self.data_dict.values())
+        try:
+            self.img = self.controller.image_queue.get_nowait()
+        except queue.Empty:
+            pass
+        else:
+            logger.info("rendering new image ...")
+            # before = time.time()
+            # self.update_figure()
+            # self.text = 'render time: %.2f' % (
+            #     time.time() - before)
+            # logger.info(self.text)
+
+    def dist_origin(self,x, y, z):
+        return z
 
     def on_connection_state_changed(self, connected):
         if connected:
@@ -75,73 +97,9 @@ class Tomogui(object):
         else:
             self.recording = False 
 
-    def map_z2color(self,zval, colormap, vmin, vmax):
-        #map the normalized value zval to a corresponding color in the colormap
-
-        if vmin>vmax:
-            raise ValueError('incorrect relation between vmin and vmax')
-        t=(zval-vmin)/float((vmax-vmin))#normalize val
-        R, G, B, alpha=colormap(t)
-        return 'rgb('+'{:d}'.format(int(R*255+0.5))+','+'{:d}'.format(int(G*255+0.5))+\
-               ','+'{:d}'.format(int(B*255+0.5))+')'
-
-    def tri_indices(self,simplices):
-        #simplices is a numpy array defining the simplices of the triangularization
-        #returns the lists of indices i, j, k
-
-        return ([triplet[c] for triplet in simplices] for c in range(3))
-
-    # def plotly_trisurf(self,x, y, z, simplices, colormap=cm.RdBu, plot_edges=None):
-    #     #x, y, z are lists of coordinates of the triangle vertices 
-    #     #simplices are the simplices that define the triangularization;
-    #     #simplices  is a numpy array of shape (no_triangles, 3)
-    #     #insert here the  type check for input data
-
-    #     points3D=np.vstack((x,y,z)).T
-    #     tri_vertices=map(lambda index: points3D[index], simplices)# vertices of the surface triangles     
-    #     zmean=[np.mean(tri[:,2]) for tri in tri_vertices ]# mean values of z-coordinates of 
-    #                                                       #triangle vertices
-    #     min_zmean=np.min(zmean)
-    #     max_zmean=np.max(zmean)
-    #     facecolor=[map_z2color(zz,  colormap, min_zmean, max_zmean) for zz in zmean]
-    #     I,J,K=tri_indices(simplices)
-
-    #     triangles=go.Mesh3d(x=x,
-    #                      y=y,
-    #                      z=z,
-    #                      facecolor=facecolor,
-    #                      i=I,
-    #                      j=J,
-    #                      k=K,
-    #                      name=''
-    #                     )
-
-    #     if plot_edges is None:# the triangle sides are not plotted 
-    #         return [triangles]
-    #     else:
-    #         #define the lists Xe, Ye, Ze, of x, y, resp z coordinates of edge end points for each triangle
-    #         #None separates data corresponding to two consecutive triangles
-    #         lists_coord=[[[T[k%3][c] for k in range(4)]+[ None]   for T in tri_vertices]  for c in range(3)]
-    #         Xe, Ye, Ze=[reduce(lambda x,y: x+y, lists_coord[k]) for k in range(3)]
-
-    #         #define the lines to be plotted
-    #         lines=go.Scatter3d(x=Xe,
-    #                         y=Ye,
-    #                         z=Ze,
-    #                         mode='lines',
-    #                         line=dict(color= 'rgb(50,50,50)', width=1.5)
-    #                )
-    #         return [triangles, lines]
-
     def return_layout(self):
 
         self.layout = html.Div( [
-
-                # html.Link(
-                #     rel='stylesheet',
-                #     href='/static/stylesheet.css'
-                # ),
-
                 html.Div( [
 
                     html.Div( [
@@ -209,8 +167,6 @@ class Tomogui(object):
                     ] , style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),                    
 
                 ], style={'width': '100%', 'display': 'inline-block'} ),
-
-
 
                 html.Div( [
 
@@ -282,11 +238,6 @@ class Tomogui(object):
             
             ] )      
 
-        # @app.server.route('/static/<path:path>')
-        # def static_file(path):
-        #     static_folder = os.path.join(os.getcwd(), 'static')
-        #     return send_from_directory(static_folder, path)
-
         @self.app.callback( 
             dash.dependencies.Output('savebuttonim', 'children'),
             [dash.dependencies.Input('savebuttonim', 'n_clicks')])
@@ -341,98 +292,143 @@ class Tomogui(object):
             events=[Event('interval-component', 'interval')])
         def update_graph_scatter():
             # update the data queue. 
-            #self.process_data()
+            self.process_data()
 
-            data3=[] # plotly_trisurf(x,y,z, faces, colormap=cm.RdBu, plot_edges=None)
+            if self.algorithm  == 'greit':
+                self.gx,self.gy,self.ds = self.controller.greit_params()
+                self.img = self.ds # numpy.zeros((32,32),dtype=float)
+                # If algorithm is GREIT 
+                layout = go.Layout(
+                    width = 400,
+                    height = 400,
+                    # title = "EIT reconstruction",
+                    xaxis = dict(
+                      #nticks = 10,
+                      domain = [0.0, 0.0],
+                      showgrid=False,
+                      zeroline=False,
+                      showline=False,
+                      ticks='',
+                      showticklabels=False,
+                      # autorange = 'reversed',
+                      title='EIT',
+                    ),
+                    yaxis = dict(
+                      scaleanchor = "x",
+                      domain = [0, 0.0],
+                      showgrid=False,
+                      zeroline=False,
+                      showline=False,
+                      ticks='',
+                      showticklabels=False,
+                      # autorange = 'reversed',
+                    ),
+                    showlegend= False
+                )
 
-            title="Trisurf from a PLY file<br>"+\
-                            "Data Source:<a href='http://people.sc.fsu.edu/~jburkardt/data/ply/airplane.ply'> [1]</a>"
+                data = [
+                    go.Heatmap(
+                        z=self.img,
+                        colorscale='Jet',
+                        zmin=1, zmax=1500,
+                        colorbar=dict(
+                                #title='Colorbar',
+                                lenmode = 'fraction',
+                                len = 1.0,
+                                x=1.2,
+                                y = 0.5
+                            ),
+                    )
+                ]
+            else: 
+                self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
+                #self.gx,self.gy,self.ds = self.controller.greit_params()
+                #self.img = self.ds # numpy.zeros((32,32),dtype=float)
+                #self.img = numpy.zeros(self.x.shape[0]) 
+ 
+                camera = dict(
+                    up=dict(x=0, y=0, z=1),
+                    center=dict(x=0, y=0, z=0),
+                    eye=dict(x=0.0, y=0.0, z=2.5)
+                )
 
-            noaxis=dict(showbackground=False,
-                        showline=False,
-                        zeroline=False,
-                        showgrid=False,
-                        showticklabels=False,
-                        title=''
-                      )
+                noaxis=dict(showbackground=False,
+                            showline=False,
+                            zeroline=False,
+                            showgrid=False,
+                            showticklabels=False,
+                            title=''
+                          )
 
-            fig3 = go.Figure(data=data3, layout=layout)
-            fig3['layout'].update(dict(title=title,
-                                       width=1000,
-                                       height=1000,
-                                       scene=dict(xaxis=noaxis,
-                                                  yaxis=noaxis,
-                                                  zaxis=noaxis,
-                                                  aspectratio=dict(x=1, y=1, z=0.4),
-                                                  camera=dict(eye=dict(x=1.25, y=1.25, z= 1.25)
-                                                 )
-                                       )
-                                 ))
+                layout = go.Layout(
+                         width=400,
+                         height=400,
+                         scene=dict(
+                            xaxis=noaxis,
+                            yaxis=noaxis,
+                            zaxis=noaxis,
+                            aspectratio=dict(
+                                x=1.0,
+                                y=1.0,
+                                z=0.0),
+                            camera =camera,
+                            )
 
-            py.iplot(fig3, filename='Chopper-Ply-cls')
+                        )
 
-            # if len(self.data_dict.keys()) > 0:
-            #     trace1 = go.Scatter(
-            #         x=list(self.data_dict.keys()),
-            #         y=list(self.data_dict.values()),
-            #         mode='lines',
-            #         name='PSD',
-            #         line={'shape': 'spline'},
-            #         fill='tozeroy'
-            #     )
+                self.img[0] = 5 
+                data = FF.create_trisurf(x=self.x, y=self.y, z=self.img,
+                                         simplices=self.tri,
+                                         color_func=self.dist_origin, # this is equivalent to the mask in tripcolor. 
+                                         colormap='Portland',
+                                         show_colorbar=False,
+                                         title="mesh",
+                                         aspectratio=dict(x=1.0, y=1.0, z=0.01),
+                                         showbackground=False,
+                                         plot_edges=False,
+                                         height=600, width=600, 
+                                         scale=None,
+                                         ) 
 
-            #     data = [trace1]
-
-            #     layout = go.Layout(
-            #         title='Bioimpedance Spectroscopy',
-            #         xaxis=dict(
-            #             title='Frequency (Hz)',
-            #             type='linear',
-            #             autorange=True
-            #         ),
-            #         yaxis=dict(
-            #             title='Amplitude',
-            #             autorange=True
-            #         )
-            #     )
 
             return {'data': data, 'layout': layout}
 
-        # @app.callback(
-        #     Output('live-update-spectrogram', 'figure'),
-        #     events=[Event('interval-component', 'interval')])
-        # def update_graph_scatter():
-        #     # update the data queue. 
-        #     self.process_data()
+        @self.app.callback(
+            Output('live-update-histogram', 'figure'),
+            events=[Event('interval-component', 'interval')])
+        def update_graph_scatter():
+            # update the data queue. 
+            # self.process_data()
+            # this is just dummy data filling in here for now, later it should be the updated img data. 
+            # 
+            #self.gx,self.gy,self.ds = self.controller.greit_params()
+            #self.img = self.ds # numpy.zeros((32,32),dtype=float)
 
-        #     if len(self.data_dict.keys()) > 0:
-        #         trace1 = go.Scatter(
-        #             x=list(self.data_dict.keys()),
-        #             y=list(self.data_dict.values()),
-        #             mode='lines',
-        #             name='PSD',
-        #             line={'shape': 'spline'},
-        #             fill='tozeroy'
-        #         )
+            self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
+            self.img = numpy.zeros(self.x.shape[0]) 
 
-        #         data = [trace1]
+            nanless = self.img[~numpy.isnan(self.img)]
+            flatimg = (nanless).flatten()
 
-        #         layout = go.Layout(
-        #             title='Bioimpedance Spectroscopy',
-        #             xaxis=dict(
-        #                 title='Frequency (Hz)',
-        #                 type='linear',
-        #                 autorange=True
-        #             ),
-        #             yaxis=dict(
-        #                 title='Amplitude',
-        #                 autorange=True
-        #             )
-        #         )
+            # print (flatimg)
 
-        #         return {'data': data, 'layout': layout}
-        #         
-        # _LOGGER.debug('App running at: http://localhost:%s' % PORT)
-        # app.run_server(port=PORT)
+            data = [go.Histogram(x=flatimg)]
+
+            layout = go.Layout(
+                title='Histogram',
+                xaxis=dict(
+                    title='Amplitudes',
+                    type='linear',
+                    autorange=True
+                ),
+                yaxis=dict(
+                    title='Frequency',
+                    autorange=True
+                )
+            )
+
+            return {'data': data, 'layout': layout}
+
         return self.layout
+
 
