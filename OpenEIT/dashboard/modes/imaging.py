@@ -1,7 +1,7 @@
 import logging
 import os
 import dash
-from dash.dependencies import Input, Output, Event
+from dash.dependencies import Input, Output, Event, State
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.plotly as py
@@ -15,7 +15,8 @@ import OpenEIT.dashboard
 import queue
 import numpy
 
-
+import base64
+#import io
 
 PORT = 8050
 S_TO_MS = 1000
@@ -38,7 +39,7 @@ class Tomogui(object):
     def __init__(self, controller, app):
 
         self.controller = controller
-        self.app 		= app 
+        self.app= app 
 
         self.n_el = self.controller.n_el
         self.algorithm = self.controller.algorithm
@@ -67,12 +68,8 @@ class Tomogui(object):
         self.vmin = 0 
         self.vmax = 1000
 
-        self.range_min  = 0 
-        self.range_max  = 1500
-        self.range_step = 20
-
-        self.rsvaluemin = 20
-        self.rsvaluemax = 1100
+        self.rsvaluemin = self.vmin
+        self.rsvaluemax = self.vmax
 
         self.run_file = False 
 
@@ -93,6 +90,7 @@ class Tomogui(object):
         else:
             logger.info("rendering new image ...")
             # before = time.time()
+            print ('new image is available')
             # self.update_figure()
             # self.text = 'render time: %.2f' % (
             #     time.time() - before)
@@ -108,33 +106,6 @@ class Tomogui(object):
     def set_baseline(self):
         print ('setting the baseline')
         self.controller.baseline()
-
-    def autoscale(self): # This sets baseline to what was originally stored in the background.txt file. 
-        print ('we are in the autoscale function')
-        nanless = self.img[~numpy.isnan(self.img)]
-        self.vmax= float(int(numpy.max(nanless)*100))/100.0
-        self.vmin =float(int(numpy.min(nanless)*100))/100.0
-
-        # Update the range-slider parameters.
-        # This doesn't work as the range-slider doesn't like being updated dynamically. 
-        # 
-        self.range_min  = self.vmin
-        self.range_max  = self.vmax
-        self.range_step = (self.vmax - self.vmin)/10.0
-        # we also need to update the current range slider values. 
-
-    def load_file(self,file_path):
-
-        try:
-            file_handle = open(file_path, "r")
-            #logger.info(file_handle)
-        except RuntimeError as err:
-            logger.error('problem opening file dialog: %s', err)
-
-        if file_handle is None:
-            print ('didnt get the file!')
-            return
-        self.controller.load_file(file_handle)
 
     def run_file(self):
         self.run_file = True
@@ -178,7 +149,7 @@ class Tomogui(object):
                     ], style={'width': '10%', 'display': 'inline-block','text-align': 'center'} ),
 
                     html.Div( [
-                    html.Button(children='Save Current Spectrum', id='savebuttonim', type='submit'),
+                    html.Button(children='Record', id='savebuttonim', type='submit'),
                     ] , style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),
 
                     html.Div( [
@@ -218,7 +189,7 @@ class Tomogui(object):
                     ] , style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),
 
                     html.Div( [
-                    html.Button(children='Reset File Marker', id='resetfilem', type='submit'),
+                    html.Button(children='Reset', id='resetfilem', type='submit'),
                     ] , style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),                    
 
                 ], style={'width': '100%', 'display': 'inline-block'} ),
@@ -234,33 +205,26 @@ class Tomogui(object):
                     dcc.Input(
                         id='minimum_range',
                         placeholder='Enter',
-                        type='text',
-                        value=''
+                        type='number',
+                        value='0'
                     ),
-                    ] , style={'width': '10%', 'display': 'inline-block','text-align': 'center'}), 
+                    ] , style={'width': '20%', 'display': 'inline-block','text-align': 'center'}), 
 
                     html.Div(
-                     [
-                        dcc.RangeSlider(
-                            id='range-slider',
-                            count=1,
-                            min=self.range_min,
-                            max=self.range_max,
-                            step=self.range_step,
-                            value=[self.rsvaluemin, self.rsvaluemax]
-                        ),
-                    ] , style={'width': '60%', 'display': 'inline-block','text-align': 'center'}),                     
+                        id='slider-container',
+                        style={'width': '40%', 'display': 'inline-block','text-align': 'center'}
+                    ),
 
                     html.Div( [
                         html.P('Range Max: '),
-                    ], style={'width': '10%', 'display': 'inline-block','text-align': 'center'} ),
+                    ], style={'width': '15%', 'display': 'inline-block','text-align': 'center'} ),
 
                     html.Div( [
                     dcc.Input(
                         id='maximum_range',
                         placeholder='Enter',
-                        type='text',
-                        value=''
+                        type='number',
+                        value='1000'
                     ),
                     ] , style={'width': '10%', 'display': 'inline-block','text-align': 'center'}), 
                     
@@ -312,9 +276,11 @@ class Tomogui(object):
                 html.Ul(id="ab"),
             ] )      
 
+
+
         @self.app.callback( 
-            dash.dependencies.Output('savebuttonim', 'children'),
-            [dash.dependencies.Input('savebuttonim', 'n_clicks')])
+            Output('savebuttonim', 'children'),
+            [Input('savebuttonim', 'n_clicks')])
         def callback_dropdown(n_clicks):
             if n_clicks is not None:
                 try: 
@@ -334,9 +300,9 @@ class Tomogui(object):
 
 
         @self.app.callback(
-            dash.dependencies.Output(component_id='connectbuttonim', component_property='children'),
-            [dash.dependencies.Input(component_id='connectbuttonim', component_property='n_clicks'),
-            dash.dependencies.Input(component_id='name-dropdownim', component_property='value')]
+            Output(component_id='connectbuttonim', component_property='children'),
+            [Input(component_id='connectbuttonim', component_property='n_clicks'),
+            Input(component_id='name-dropdownim', component_property='value')]
         )
         def connect(n_clicks, dropdown_value):
             if n_clicks is not None:
@@ -354,69 +320,69 @@ class Tomogui(object):
                 return 'Disconnect' 
             else:
                 return 'Connect'
-     
 
-        @self.app.callback(
-                    dash.dependencies.Output("afilelist", "children"),
-                    [dash.dependencies.Input("readfromfile", "filename")], )
-        def readfile_output(filename):
+        @self.app.callback(Output("afilelist", "children"),
+               [Input('readfromfile', 'contents')],
+              [State('readfromfile', 'filename'),
+               State('readfromfile', 'last_modified')])       
+        def readfile_output(contents, filename, date):
             if filename is not None:
-                print (filename)
-                filename = '/Users/jeanrintoul/Desktop/mindseyebiomedical/EIT/EIT_Altium/EIT_32/python/EIT_Dashboard/good.bin'
-                self.load_file(filename)
+                content_type, content_string = contents.split(',')
+                decoded = base64.b64decode(content_string)
+                self.controller.load_file(filename,decoded)
+                self.run_file = False
                 return 'file loaded'
             else: 
                 return 'no file'
 
-
         @self.app.callback(
-                    dash.dependencies.Output("astepfile", "children"),
-                    [dash.dependencies.Input("stepfile", "n_clicks")], )
+                    Output("astepfile", "children"),
+                    [Input("stepfile", "n_clicks")], )
         def step_call(n_clicks):
             if n_clicks is not None:
                 print ('step forward')
-                self.controller.step_file
-                self.process_data()
-
+                self.controller.step_file()
+                self.run_file = False
                 return 'step'
             else: 
                 return 'not step'
 
         @self.app.callback(
-                    dash.dependencies.Output("astepback", "children"),
-                    [dash.dependencies.Input("stepback", "n_clicks")], )
+                    Output("astepback", "children"),
+                    [Input("stepback", "n_clicks")], )
         def stepback_call(n_clicks):
             if n_clicks is not None:
                 print ('step back')
-                self.controller.step_file_back
-                self.process_data()
+                self.controller.step_file_back()
+                self.run_file = False
                 return 'step back'
             else: 
                 return 'not step back'
 
         @self.app.callback(
-                    dash.dependencies.Output("arunfile", "children"),
-                    [dash.dependencies.Input("runfile", "n_clicks")], )
+                    Output("arunfile", "children"),
+                    [Input("runfile", "n_clicks")], )
         def runfile(n_clicks):
             if n_clicks is not None:
-                self.run_file()
+                self.run_file = True
                 return 'runfile'
             else: 
                 return 'not runfile'
 
         @self.app.callback(
-                    dash.dependencies.Output("aresetfilem", "children"),
-                    [dash.dependencies.Input("resetfilem", "n_clicks")], )
+                    Output("aresetfilem", "children"),
+                    [Input("resetfilem", "n_clicks")], )
         def resetfilemarker(n_clicks):
             if n_clicks is not None:
                 self.controller.reset_file()  
+                self.run_file = False
                 return 'reset filem'
             else: 
                 return 'reset not'   
 
         @self.app.callback(
-                    dash.dependencies.Output("abaseline", "children"),
-                    [dash.dependencies.Input("baseline", "n_clicks")], )
+                    Output("abaseline", "children"),
+                    [Input("baseline", "n_clicks")], )
         def baseline_data(n_clicks):
             if n_clicks is not None:
                 self.set_baseline()
@@ -425,67 +391,78 @@ class Tomogui(object):
                 return 'not baseline'
 
         @self.app.callback(
-                    dash.dependencies.Output("aautoscale", "children"),
-                    [dash.dependencies.Input("autoscale", "n_clicks")], )
+                    Output("maximum_range", "value"),
+                    [Input("autoscale", "n_clicks")], )
         def autoscale_data(n_clicks):
             if n_clicks is not None:
-                self.autoscale()  
-                return 'autoscale'
-            else: 
-                return 'not autoscale'            
+                autoscale()  
+                return  self.vmax
 
         @self.app.callback(
-                    dash.dependencies.Output("a", "children"),
-                    [dash.dependencies.Input("maximum_range", "value")], )
+                    Output("minimum_range", "value"),
+                    [Input("autoscale", "n_clicks")], )
+        def autoscale_data(n_clicks):
+            if n_clicks is not None:
+                autoscale()  
+                return  self.vmin
+
+        @self.app.callback(
+                    Output("range-slider", "value"),
+                    [Input("maximum_range", "value")], )
         def change_maxrange(value):
-            print (value)
-            print (type(value))
-            self.rsvaluemin = float(value)
-            return 'a'
+            self.rsvaluemax = value
+            return value
 
         @self.app.callback(
-                    dash.dependencies.Output("ab", "children"),
-                    [dash.dependencies.Input("minimum_range", "value")], )
+                    Output("ab", "children"),
+                    [Input("minimum_range", "value")], )
         def change_minrange(value):
-            print (value)
-            self.rsvaluemax = float(value)
+            self.rsvaluemin = value
             return 'ab'
-## 
+
         @self.app.callback(
-            dash.dependencies.Output('output-container-range-slider', 'children'),
-            [dash.dependencies.Input('range-slider', 'value')])
+            Output('output-container-range-slider', 'children'),
+            [Input('range-slider', 'value')])
         def update_output(value):
-            print(type(value[0]),value[1])
             # based on value, updated colorbar vmin and vmax. 
             self.vmin = value[0]
             self.vmax = value[1]
-            return 'You have selected "{}"'.format(value)
-##########
+            return format(value)
 
         @self.app.callback(
-            Output('container', 'children'),
+            Output('slider-container', 'children'),
             [Input('minimum_range', 'value'),
              Input('maximum_range', 'value')])
         def display_controls(datasource_1_value, datasource_2_value):
-            v = [datasource_1_value, datasource_2_value]
-            # generate 2 dynamic controls based off of the datasource selections
-            return html.Div([
-                dcc.RangeSlider(
-                                id='range-slider',
-                                count=1,
-                                min=self.range_min,
-                                max=self.range_max,
-                                step=self.range_step,
-                                value=[self.rsvaluemin, self.rsvaluemax]
-                            ),
-            ])
+                print (datasource_1_value, datasource_2_value) 
+                DYNAMIC_CONTROLS = {}
+                therange = int(datasource_2_value) - int(datasource_1_value)
+                step     = int(therange)//20
+                if step == 0:
+                    step = 1
 
-
+                DYNAMIC_CONTROLS = dcc.RangeSlider(
+                    id    = 'range-slider',
+                    marks= {i: ' {}'.format(i) for i in range(int(datasource_1_value), int(datasource_2_value),step)},
+                    min   = datasource_1_value,
+                    max   = datasource_2_value,
+                    step  = therange//20,
+                    value = [((int(datasource_1_value) + therange)//10),((int(datasource_2_value) - 5*therange)//10)]
+                )
+                return html.Div(
+            DYNAMIC_CONTROLS
+            )
         @self.app.callback(
             Output('live-update-image', 'figure'),
             events=[Event('interval-component', 'interval')])
         def update_graph_scatter():
             # update the data queue. 
+            if self.run_file is True: 
+               if self.controller.step_file():
+                  print ('stepped the file')
+               else: 
+                    self.run_file = False
+
             # if there is data on the queue, do an update. 
             self.process_data()
 
@@ -625,6 +602,17 @@ class Tomogui(object):
             )
 
             return {'data': data, 'layout': layout}
+
+        def autoscale(): # This sets baseline to what was originally stored in the background.txt file. 
+            print ('we are in the autoscale function')
+            nanless = self.img[~numpy.isnan(self.img)]
+            self.vmax= float(int(numpy.max(nanless)*100))/100.0
+            self.vmin =float(int(numpy.min(nanless)*100))/100.0
+
+            self.rsvaluemin = self.vmin
+            self.rsvaluemax = self.vmax
+            display_controls(self.vmin,self.vmax)
+
 
         return self.layout
 

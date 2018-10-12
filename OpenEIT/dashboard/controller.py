@@ -72,6 +72,47 @@ class FilePlayback(PlaybackStrategy):
             return True
         return False
 
+class FilePlaybackDash(PlaybackStrategy):
+    """
+    This playback strategy allows to directly feed data from files to
+    the reconstruction process.
+    """
+    # FilePlaybackDash(filename,contents, self)
+    def __init__(self, filename,contents, controller):
+
+        content_string = str(contents, 'utf-8')
+        string = ''.join(content_string)
+
+        res = []
+        for line in string.splitlines():
+            # print (len(line))
+            data = OpenEIT.backend.parse_line(line)
+            if data is not None:
+                res.append(data)
+        self._file_data = res
+        self._file_marker = 0
+        self._queue = controller._data_queue
+
+    def close(self):
+        pass
+
+    def rewind(self):
+        self._file_marker = 0
+
+    def step(self):
+        if self._file_marker < len(self._file_data):
+            self._queue.put(self._file_data[self._file_marker])
+            self._file_marker += 1
+            print (self._file_marker)
+            return True
+        return False
+
+    def step_back(self):
+        if self._file_marker > 0:
+            self._file_marker -= 1
+            self._queue.put(self._file_data[self._file_marker])
+            return True
+        return False
 
 class VirtualSerialPortPlayback(PlaybackStrategy):
     """
@@ -143,7 +184,7 @@ class Controller:
                     self.emit("connection_state_changed", True)
             elif read_file:
                 with open(initial_port, "r") as file_handle:
-                    self.playback = FilePlayback(file_handle, self)
+                    self.playback = FilePlaybackDash(file_handle, self)
                     self.emit("connection_state_changed", True)
             else:
                 self.menuselect.set(initial_port)
@@ -218,12 +259,10 @@ class Controller:
         self.serial_handler.disconnect()
         self.emit("connection_state_changed", False)
 
-    def load_file(self, file_handle):
+    def load_file(self, filename, contents):
         self.disconnect()
-        print (file_handle)
-        self.playback = FilePlayback(file_handle, self)
+        self.playback = FilePlaybackDash(filename,contents, self)
         self.emit("connection_state_changed", True)
-        print (dir(self.playback))
 
     def step_file(self):
         if self.playback is not None:
