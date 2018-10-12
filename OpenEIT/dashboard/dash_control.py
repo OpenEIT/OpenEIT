@@ -86,19 +86,17 @@ class runGui(object):
                 if pathname == mode.url:
                     print (mode.name)
                     s.set_mode(mode)
-                    # 
                     # instantiate the particular mode. 
                     if mode.name == 'Spectroscopy': 
-                        layout = html.Div([html.H3(mode.name), self.bislayout])
+                        layout = html.Div([self.bislayout])
                     elif mode.name == 'TimeSeries':
-                        print ('we got here')
-                        layout = html.Div([html.H3(mode.name), self.time_serieslayout ])
+                        layout = html.Div([self.time_serieslayout ])
                     else:
                         layout = html.Div([self.imaginglayout])
 
             return layout
 
-        # This should display the navbar linkes, but it is never getting called. 
+ 
         @self.app.callback(Output('navbar-links', 'children'),
                       [Input('url', 'pathname')])
         def display_nav(pathname):

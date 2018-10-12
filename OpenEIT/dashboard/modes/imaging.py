@@ -129,6 +129,29 @@ class Tomogui(object):
         self.layout = html.Div( [
                 html.Div( [
 
+                    # stylesheet. 
+                    html.Link(
+                        rel='stylesheet',
+                        href='/static/bootstrap.min.css'
+                    ),
+
+                    # # logo and brand name 
+                    # html.Div([
+                    #     dcc.Link(
+                    #     html.Div([
+                    #         html.Img(
+                    #             src='/static/logo-white.png',
+                    #             style={'height': 30, 'margin-right': 10}),
+                    #         'OpenEIT Dashboard'
+                    #     ]),
+                    #     style={'margin-right': 40},
+                    #     className="navbar-brand",
+                    #     href='/'
+                    #     ),
+                    #     # navbar links
+                    #     html.Div(id='navbar-links', className='btn-group')
+                    # ], className='navbar navbar-expand-lg navbar-dark bg-dark'),
+
                     html.Div( [
                         html.P('Realtime Control: '),
                     ], style={'width': '10%', 'display': 'inline-block','text-align': 'center'} ),
@@ -145,19 +168,19 @@ class Tomogui(object):
                     ], style={'width': '30%', 'display': 'inline-block','text-align': 'center'} ),
 
                     html.Div( [
-                    html.Button(children='Connect', id='connectbuttonim', type='submit'),
+                    html.Button(children='Connect', id='connectbuttonim', type='submit',className ='btn btn-outline-dark'),
                     ], style={'width': '10%', 'display': 'inline-block','text-align': 'center'} ),
 
                     html.Div( [
-                    html.Button(children='Record', id='savebuttonim', type='submit'),
-                    ] , style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),
+                    html.Button(children='Record', id='savebuttonim', type='submit',className ='btn btn-outline-dark'),
+                    ] , className='btn-group', style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),
 
                     html.Div( [
-                    html.Button(children='Baseline', id='baseline', type='submit'),
-                    ] , style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),
+                    html.Button(children='Baseline', id='baseline', type='submit',className ='btn btn-outline-dark'),
+                    ] ,  style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),
 
                     html.Div( [
-                    html.Button(children='Autoscale', id='autoscale', type='submit'),
+                    html.Button(children='Autoscale', id='autoscale', type='submit',className ='btn btn-outline-dark'),
                     ] , style={'width': '15%', 'display': 'inline-block','text-align': 'center'}),
 
                     # html.Div( [
@@ -170,26 +193,26 @@ class Tomogui(object):
                                         # the button controls      
                     html.Div( [
                     html.P('Offline File Control: '),
-                    ], className='btn-group',style={'width': '15%', 'display': 'inline-block','text-align': 'center'} ),
+                    ], style={'width': '15%', 'display': 'inline-block','text-align': 'center'} ),
 
                     html.Div( [
-                    dcc.Upload(id='readfromfile',children=html.Button('Read File',id='rbut')),
+                    dcc.Upload(id='readfromfile',children=html.Button('Read File',id='rbut',className ='btn btn-outline-dark')),
                     ] , style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),
                     
                     html.Div( [
-                    html.Button(children='Step', id='stepfile', type='submit'),
+                    html.Button(children='Step', id='stepfile', type='submit',className ='btn btn-outline-dark'),
                     ], style={'width': '10%', 'display': 'inline-block','text-align': 'center'} ),
 
                     html.Div( [
-                    html.Button(children='Step Back', id='stepback', type='submit'),
+                    html.Button(children='Step Back', id='stepback', type='submit',className ='btn btn-outline-dark'),
                     ] , style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),
 
                     html.Div( [
-                    html.Button(children='Run', id='runfile', type='submit'),
+                    html.Button(children='Run', id='runfile', type='submit',className ='btn btn-outline-dark'),
                     ] , style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),
 
                     html.Div( [
-                    html.Button(children='Reset', id='resetfilem', type='submit'),
+                    html.Button(children='Reset', id='resetfilem', type='submit',className ='btn btn-outline-dark'),
                     ] , style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),                    
 
                 ], style={'width': '100%', 'display': 'inline-block'} ),
@@ -246,7 +269,7 @@ class Tomogui(object):
                                 'displayModeBar': False
                             }
                         ),
-                    ] , style={'width': '40%', 'display': 'inline-block','text-align': 'center'}), 
+                    ] , style={'width': '60%', 'display': 'inline-block','text-align': 'center'}), 
                     
                     html.Div( [
                         dcc.Graph(
@@ -256,7 +279,7 @@ class Tomogui(object):
                                 'displayModeBar': False
                             }
                         ),
-                    ] , style={'width': '60%', 'display': 'inline-block','text-align': 'center'}), 
+                    ] , style={'width': '40%', 'display': 'inline-block','text-align': 'top'}), 
                     
                 dcc.Interval(
                     id='interval-component',
@@ -437,7 +460,7 @@ class Tomogui(object):
                 print (datasource_1_value, datasource_2_value) 
                 DYNAMIC_CONTROLS = {}
                 therange = int(datasource_2_value) - int(datasource_1_value)
-                step     = int(therange)//20
+                step     = int(therange)//10
                 if step == 0:
                     step = 1
 
@@ -471,8 +494,8 @@ class Tomogui(object):
                 # self.img = self.ds # numpy.zeros((32,32),dtype=float)
                 # If algorithm is GREIT 
                 layout = go.Layout(
-                    width = 400,
-                    height = 400,
+                    width = 600,
+                    height = 600,
                     # title = "EIT reconstruction",
                     xaxis = dict(
                       #nticks = 10,
@@ -587,7 +610,7 @@ class Tomogui(object):
 
             layout = go.Layout(
                 title='Histogram',
-                width=700,
+                width=500,
                 height=300,
                 xaxis=dict(
                     title='Amplitudes',
