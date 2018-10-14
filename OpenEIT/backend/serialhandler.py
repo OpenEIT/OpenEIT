@@ -167,7 +167,7 @@ class SerialHandler:
                     # parsed data
                     with serialhandler._recording_lock:
                         if serialhandler._recording:
-                            logger.info("this is within handle line serialhandler._recording")
+                            logger.info("serialhandler._recording")
                             serialhandler._record_file.write(line + "\n")
 
                     # parse line based on different input data types. 
@@ -178,7 +178,6 @@ class SerialHandler:
                     else: 
                         res = parse_line(line)
                     
-
                     # logger.info(res)
                     if res is not None:
                         serialhandler._queue.put(res)

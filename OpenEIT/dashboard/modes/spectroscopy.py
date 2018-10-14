@@ -66,30 +66,30 @@ class BISgui(object):
 
     def return_layout(self):
         self.layout = html.Div( [
-                # html.Link(
-                #     rel='stylesheet',
-                #     href='/static/bootstrap.min.css'
-                # ),
-                html.Div( [
-                    html.Div( [
+                html.Link(
+                    rel='stylesheet',
+                    href='/static/bootstrap.min.css'
+                ),
+                #html.Div( [
+                    #html.Div( [
                     # the button controls      
-                    dcc.Dropdown(
-                        id='name-dropdown',
-                        options=[{'label':name, 'value':name} for name in self.portnames],
-                        placeholder = 'Select Port',
-                        value = self.portnames[0]
-                        ),
-                    ], style={'width': '60%', 'display': 'inline-block','text-align': 'center'} ),
+                    # dcc.Dropdown(
+                    #     id='name-dropdown',
+                    #     options=[{'label':name, 'value':name} for name in self.portnames],
+                    #     placeholder = 'Select Port',
+                    #     value = self.portnames[0]
+                    #     ),
+                    # ], style={'width': '60%', 'display': 'inline-block','text-align': 'center'} ),
 
-                    html.Div( [
-                    html.Button(children='Connect', id='connectbutton', type='submit'),
-                    ], style={'width': '15%', 'display': 'inline-block','text-align': 'center'} ),
+                    # html.Div( [
+                    # html.Button(children='Connect', id='connectbutton', type='submit'),
+                    # ], style={'width': '15%', 'display': 'inline-block','text-align': 'center'} ),
 
-                    html.Div( [
-                    html.Button(children='Save Current Spectrum', id='savebutton', type='submit'),
-                    ] , style={'width': '15%', 'display': 'inline-block','text-align': 'center'}),
+                    # html.Div( [
+                    # html.Button(children='Save Current Spectrum', id='savebutton', type='submit'),
+                    # ] , style={'width': '15%', 'display': 'inline-block','text-align': 'center'}),
 
-                ], style={'width': '100%', 'display': 'inline-block'} ),
+                #], style={'width': '100%', 'display': 'inline-block'} ),
 
                 # The graph. 
                 dcc.Graph(
@@ -105,61 +105,53 @@ class BISgui(object):
                     interval=PLOT_REFRESH_INTERVAL
                 ),
 
-                # html.Div([
-                    # html.P(id='connectbuttoncall',children='connectbuttoncall'),
-                #     html.P(id='savebuttoncall',children='savebuttoncall'),
-                # ], style={'width': '100%', 'display': 'inline-block'})
             
             ] )      
 
-        # @self.app.server.route('/static/<path:path>')
-        # def static_file(path):
-        #     static_folder = os.path.join(os.getcwd(), 'static')
-        #     return send_from_directory(static_folder, path)
 
-        @self.app.callback( 
-            dash.dependencies.Output('savebutton', 'children'),
-            [dash.dependencies.Input('savebutton', 'n_clicks')])
-        def callback_dropdown(n_clicks):
-            print ('savebutton callback')
-            if n_clicks is not None:
-                try: 
-                    if self.recording == False:
-                        print('start recording')
-                        self.controller.start_recording()
-                    else:
-                        print ('stop recording')
-                        self.controller.stop_recording()
-                except: 
-                    print('could not record')
-                    self.recording = False 
-            if self.recording is True: 
-                return 'Stop Recording' 
-            else:
-                return 'Record'
+        # @self.app.callback( 
+        #     dash.dependencies.Output('savebutton', 'children'),
+        #     [dash.dependencies.Input('savebutton', 'n_clicks')])
+        # def callback_dropdown(n_clicks):
+        #     print ('savebutton callback')
+        #     if n_clicks is not None:
+        #         try: 
+        #             if self.recording == False:
+        #                 print('start recording')
+        #                 self.controller.start_recording()
+        #             else:
+        #                 print ('stop recording')
+        #                 self.controller.stop_recording()
+        #         except: 
+        #             print('could not record')
+        #             self.recording = False 
+        #     if self.recording is True: 
+        #         return 'Stop Recording' 
+        #     else:
+        #         return 'Record'
 
 
-        @self.app.callback(
-            dash.dependencies.Output(component_id='connectbutton', component_property='children'),
-            [dash.dependencies.Input(component_id='connectbutton', component_property='n_clicks'),
-            dash.dependencies.Input(component_id='name-dropdown', component_property='value')]
-        )
-        def connect(n_clicks, dropdown_value):
-            if n_clicks is not None:
-                try: 
-                    if self.connected == False:
-                        print('connect')
-                        self.controller.connect(str(dropdown_value))
-                    else:
-                        print('disconnect')
-                        self.controller.disconnect()
-                except: 
-                    print('could not connect, is the device plugged in?')
-                    self.connected = False 
-            if self.connected is True: 
-                return 'Disconnect' 
-            else:
-                return 'Connect'
+        # @self.app.callback(
+        #     dash.dependencies.Output(component_id='connectbutton', component_property='children'),
+        #     [dash.dependencies.Input(component_id='connectbutton', component_property='n_clicks'),
+        #     dash.dependencies.Input(component_id='name-dropdown', component_property='value')]
+        # )
+        # def connect(n_clicks, dropdown_value):
+        #     if n_clicks is not None:
+        #         try: 
+        #             if self.connected == False:
+        #                 print('connect')
+        #                 self.controller.connect(str(dropdown_value))
+        #             else:
+        #                 print('disconnect')
+        #                 self.controller.disconnect()
+        #         except: 
+        #             print('could not connect, is the device plugged in?')
+        #             self.connected = False 
+        #     if self.connected is True: 
+        #         return 'Disconnect' 
+        #     else:
+        #         return 'Connect'
      
         @self.app.callback(
             Output('live-update-spectrogram', 'figure'),

@@ -127,141 +127,109 @@ class Tomogui(object):
     def return_layout(self):
 
         self.layout = html.Div( [
-                html.Div( [
-
-                    # stylesheet. 
-                    html.Link(
-                        rel='stylesheet',
-                        href='/static/bootstrap.min.css'
-                    ),
-
-                    # # logo and brand name 
-                    # html.Div([
-                    #     dcc.Link(
-                    #     html.Div([
-                    #         html.Img(
-                    #             src='/static/logo-white.png',
-                    #             style={'height': 30, 'margin-right': 10}),
-                    #         'OpenEIT Dashboard'
-                    #     ]),
-                    #     style={'margin-right': 40},
-                    #     className="navbar-brand",
-                    #     href='/'
-                    #     ),
-                    #     # navbar links
-                    #     html.Div(id='navbar-links', className='btn-group')
-                    # ], className='navbar navbar-expand-lg navbar-dark bg-dark'),
-
-                    html.Div( [
-                        html.P('Realtime Control: '),
-                    ], style={'width': '10%', 'display': 'inline-block','text-align': 'center'} ),
-                    
-
-                    html.Div( [
-                    # the button controls      
-                    dcc.Dropdown(
-                        id='name-dropdownim',
-                        options=[{'label':name, 'value':name} for name in self.portnames],
-                        placeholder = 'Select Port',
-                        value = self.portnames[0]
-                        ),
-                    ], style={'width': '30%', 'display': 'inline-block','text-align': 'center'} ),
-
-                    html.Div( [
-                    html.Button(children='Connect', id='connectbuttonim', type='submit',className ='btn btn-outline-dark'),
-                    ], style={'width': '10%', 'display': 'inline-block','text-align': 'center'} ),
-
-                    html.Div( [
-                    html.Button(children='Record', id='savebuttonim', type='submit',className ='btn btn-outline-dark'),
-                    ] , className='btn-group', style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),
-
-                    html.Div( [
-                    html.Button(children='Baseline', id='baseline', type='submit',className ='btn btn-outline-dark'),
-                    ] ,  style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),
-
-                    html.Div( [
-                    html.Button(children='Autoscale', id='autoscale', type='submit',className ='btn btn-outline-dark'),
-                    ] , style={'width': '15%', 'display': 'inline-block','text-align': 'center'}),
-
-                    # html.Div( [
-                    # html.Button(children='Update Histogram', id='histogram', type='submit'),
-                    # ] , style={'width': '15%', 'display': 'inline-block','text-align': 'center'}),
-
-                ], style={'width': '100%', 'display': 'inline-block'} ),
-
-                html.Div( [
-                                        # the button controls      
-                    html.Div( [
-                    html.P('Offline File Control: '),
-                    ], style={'width': '15%', 'display': 'inline-block','text-align': 'center'} ),
-
-                    html.Div( [
-                    dcc.Upload(id='readfromfile',children=html.Button('Read File',id='rbut',className ='btn btn-outline-dark')),
-                    ] , style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),
-                    
-                    html.Div( [
-                    html.Button(children='Step', id='stepfile', type='submit',className ='btn btn-outline-dark'),
-                    ], style={'width': '10%', 'display': 'inline-block','text-align': 'center'} ),
-
-                    html.Div( [
-                    html.Button(children='Step Back', id='stepback', type='submit',className ='btn btn-outline-dark'),
-                    ] , style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),
-
-                    html.Div( [
-                    html.Button(children='Run', id='runfile', type='submit',className ='btn btn-outline-dark'),
-                    ] , style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),
-
-                    html.Div( [
-                    html.Button(children='Reset', id='resetfilem', type='submit',className ='btn btn-outline-dark'),
-                    ] , style={'width': '10%', 'display': 'inline-block','text-align': 'center'}),                    
-
-                ], style={'width': '100%', 'display': 'inline-block'} ),
+                # stylesheet. 
+                html.Link(
+                    rel='stylesheet',
+                    href='/static/bootstrap.min.css'
+                ),
 
 
-                html.Div( [
-
-                    html.Div( [
-                    html.P('Range Min: '),
-                    ], style={'width': '10%', 'display': 'inline-block','text-align': 'center'} ),
-
-                    html.Div( [
-                    dcc.Input(
-                        id='minimum_range',
-                        placeholder='Enter',
-                        type='number',
-                        value='0'
-                    ),
-                    ] , style={'width': '20%', 'display': 'inline-block','text-align': 'center'}), 
-
-                    html.Div(
-                        id='slider-container',
-                        style={'width': '40%', 'display': 'inline-block','text-align': 'center'}
-                    ),
-
-                    html.Div( [
-                        html.P('Range Max: '),
-                    ], style={'width': '15%', 'display': 'inline-block','text-align': 'center'} ),
-
-                    html.Div( [
-                    dcc.Input(
-                        id='maximum_range',
-                        placeholder='Enter',
-                        type='number',
-                        value='1000'
-                    ),
-                    ] , style={'width': '10%', 'display': 'inline-block','text-align': 'center'}), 
-                    
-
-                ], style={'width': '100%', 'display': 'inline-block'} ),
-
-                html.Div( [
-                    html.Div(id='output-container-range-slider')
-                ], style={'width': '100%', 'display': 'inline-block'} ),
-
-                  
                 html.Div( [  
+
+                    # The histogram and controls part: 
                     html.Div( [
-                        # The graph. 
+                        html.Div( [
+                            html.P('Offline File Control: '),
+                            # the offline controls 
+                            html.Div( [
+                 
+                                dcc.Upload(id='readfromfile',children='Read File',className ='btn btn-outline-dark'),
+
+                                html.Button(children='Step', id='stepfile', type='submit',className ='btn btn-outline-dark'),
+               
+                                html.Button(children='Step Back', id='stepback', type='submit',className ='btn btn-outline-dark'),
+                      
+                                html.Button(children='Run', id='runfile', type='submit',className ='btn btn-outline-dark'),
+                  
+                                html.Button(children='Reset', id='resetfilem', type='submit',className='btn btn-outline-dark'),
+                
+                            ], className='btn-group', style={'width': '100%', 'display': 'inline-block'} ),
+
+                        ], style={'width': '100%', 'display': 'inline-block'} ),
+
+                        html.Div( [
+                
+                            html.P('Realtime Control: '),
+                  
+                            html.Button(children='Baseline', id='baseline', type='submit',className ='btn btn-outline-dark'),
+             
+                            html.Button(children='Autoscale', id='autoscale', type='submit',className ='btn btn-outline-dark'),
+                     
+                            html.Div( [
+                            html.Div(id='output-container-range-slider')
+                            ], className='btn-group', style={'width': '100%', 'display': 'inline-block','text-align': 'center'} ),
+
+
+                        ], className='btn-group',  style={'width': '100%', 'display': 'inline-block'} ),
+
+
+                       html.Div(
+                                id='slider-container',
+                                style={'width': '100%', 'display': 'inline-block','text-align': 'center'}
+                        ),
+                        html.P(''),
+
+
+                        ## insert sliders and things here:
+                        html.Div( [
+
+                            html.Div( [
+                            html.P('Range Min: '),
+                            ], style={'width': '20%', 'display': 'inline-block','text-align': 'center'} ),
+
+                            html.Div( [
+                            dcc.Input(
+                                id='minimum_range',
+                                placeholder='Enter',
+                                style={'width': 80},
+                                type='number',
+                                value='0'
+                            ),
+                            ], style={'width': '20%', 'display': 'inline-block','text-align': 'center'} ),
+
+                     
+                            html.Div( [
+                                html.P('Range Max: '),
+                            ], style={'width': '20%', 'display': 'inline-block','text-align': 'center'} ),
+
+                            html.Div( [
+                            dcc.Input(
+                                id='maximum_range',
+                                placeholder='Enter',
+                                type='number',
+                                style={'width': 80},
+                                value='1000'
+                            ),
+                            ] , style={'width': '20%', 'display': 'inline-block','text-align': 'center'}), 
+                         
+                        ], style={'width': '100%', 'display': 'inline-block'} ),
+                        
+                        html.Div( [
+                        dcc.Graph(
+                            id='live-update-histogram',
+                            animate=False,
+                            config={
+                                'displayModeBar': False
+                            }
+                                ),
+                        ], style={'width': '100%', 'display': 'inline-block','text-align': 'center'} ),
+
+
+                    ], style={'width': '40%', 'display': 'inline-block','text-align': 'center'} ),
+
+
+                    html.Div( [
+                        # The big image graph. 
                         dcc.Graph(
                             id='live-update-image',
                             animate=False,
@@ -269,26 +237,18 @@ class Tomogui(object):
                                 'displayModeBar': False
                             }
                         ),
-                    ] , style={'width': '60%', 'display': 'inline-block','text-align': 'center'}), 
-                    
-                    html.Div( [
-                        dcc.Graph(
-                            id='live-update-histogram',
-                            animate=False,
-                            config={
-                                'displayModeBar': False
-                            }
-                        ),
-                    ] , style={'width': '40%', 'display': 'inline-block','text-align': 'top'}), 
-                    
-                dcc.Interval(
-                    id='interval-component',
-                    interval=PLOT_REFRESH_INTERVAL
-                ),
+                        dcc.Interval(
+                        id='interval-component',
+                        interval=PLOT_REFRESH_INTERVAL
+                    ),
+                    ] , style={'width': '50%', 'display': 'inline-block','text-align': 'center'}), 
+
+
+
 
                 ], style={'width': '100%', 'display': 'inline-block'} ),
 
-                html.Ul(id="afilelist"),
+                html.Ul(id="afilelist",style={'display': 'none'}),
                 html.Ul(id="astepfile"),
                 html.Ul(id="astepback"),
                 html.Ul(id="arunfile"),
@@ -298,51 +258,6 @@ class Tomogui(object):
                 html.Ul(id="a"),
                 html.Ul(id="ab"),
             ] )      
-
-
-
-        @self.app.callback( 
-            Output('savebuttonim', 'children'),
-            [Input('savebuttonim', 'n_clicks')])
-        def callback_dropdown(n_clicks):
-            if n_clicks is not None:
-                try: 
-                    if self.recording == False:
-                        print('start recording')
-                        self.controller.start_recording()
-                    else:
-                        print ('stop recording')
-                        self.controller.stop_recording()
-                except: 
-                    print('could not record')
-                    self.recording = False 
-            if self.recording is True: 
-                return 'Stop Recording' 
-            else:
-                return 'Record'
-
-
-        @self.app.callback(
-            Output(component_id='connectbuttonim', component_property='children'),
-            [Input(component_id='connectbuttonim', component_property='n_clicks'),
-            Input(component_id='name-dropdownim', component_property='value')]
-        )
-        def connect(n_clicks, dropdown_value):
-            if n_clicks is not None:
-                try: 
-                    if self.connected == False:
-                        print('connect')
-                        self.controller.connect(str(dropdown_value))
-                    else:
-                        print('disconnect')
-                        self.controller.disconnect()
-                except: 
-                    print('could not connect, is the device plugged in?')
-                    self.connected = False 
-            if self.connected is True: 
-                return 'Disconnect' 
-            else:
-                return 'Connect'
 
         @self.app.callback(Output("afilelist", "children"),
                [Input('readfromfile', 'contents')],
@@ -494,8 +409,8 @@ class Tomogui(object):
                 # self.img = self.ds # numpy.zeros((32,32),dtype=float)
                 # If algorithm is GREIT 
                 layout = go.Layout(
-                    width = 600,
-                    height = 600,
+                    width = 500,
+                    height = 500,
                     # title = "EIT reconstruction",
                     xaxis = dict(
                       #nticks = 10,

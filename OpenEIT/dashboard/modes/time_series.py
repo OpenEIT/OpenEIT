@@ -193,31 +193,10 @@ class Timeseriesgui(object):
     def return_layout(self):
 
         self.layout = html.Div( [
-                # html.Link(
-                #     rel='stylesheet',
-                #     href='/static/stylesheet.css'
-                # ),
-
-                html.Div( [
-                    html.Div( [
-                    # the button controls      
-                    dcc.Dropdown(
-                        id='name-dropdownts',
-                        options=[{'label':name, 'value':name} for name in self.portnames],
-                        placeholder = 'Select Port',
-                        value = self.portnames[0]
-                        ),
-                    ], style={'width': '60%', 'display': 'inline-block','text-align': 'center'} ),
-
-                    html.Div( [
-                    html.Button(children='Connect', id='connectbuttonts', type='submit'),
-                    ], style={'width': '15%', 'display': 'inline-block','text-align': 'center'} ),
-
-                    html.Div( [
-                    html.Button(children='Save Current Spectrum', id='savebuttonts', type='submit'),
-                    ] , style={'width': '15%', 'display': 'inline-block','text-align': 'center'}),
-
-                ], style={'width': '100%', 'display': 'inline-block'} ),
+                html.Link(
+                    rel='stylesheet',
+                    href='/static/bootstrap.min.css'
+                ),
 
                 dcc.Graph(
                     id='live-update-time-series',
@@ -237,59 +216,8 @@ class Timeseriesgui(object):
                     id='interval-component',
                     interval=PLOT_REFRESH_INTERVAL
                 ),
-                # html.Div([
-                    # html.P(id='connectbuttoncall',children='connectbuttoncall'),
-                #     html.P(id='savebuttoncall',children='savebuttoncall'),
-                # ], style={'width': '100%', 'display': 'inline-block'})
-            
+
             ] )      
-
-        # @self.app.server.route('/static/<path:path>')
-        # def static_file(path):
-        #     static_folder = os.path.join(os.getcwd(), 'static')
-        #     return send_from_directory(static_folder, path)
-
-        @self.app.callback( 
-            dash.dependencies.Output('savebuttonts', 'children'),
-            [dash.dependencies.Input('savebuttonts', 'n_clicks')])
-        def callback_dropdown(n_clicks):
-            if n_clicks is not None:
-                try: 
-                    if self.recording == False:
-                        print('start recording')
-                        self.controller.start_recording()
-                    else:
-                        print ('stop recording')
-                        self.controller.stop_recording()
-                except: 
-                    print('could not record')
-                    self.recording = False 
-            if self.recording is True: 
-                return 'Stop Recording' 
-            else:
-                return 'Record'
-
-        @self.app.callback(
-            dash.dependencies.Output(component_id='connectbuttonts', component_property='children'),
-            [dash.dependencies.Input(component_id='connectbuttonts', component_property='n_clicks'),
-            dash.dependencies.Input(component_id='name-dropdownts', component_property='value')]
-        )
-        def connect(n_clicks, dropdown_value):
-            if n_clicks is not None:
-                try: 
-                    if self.connected == False:
-                        print('connect')
-                        self.controller.connect(str(dropdown_value))
-                    else:
-                        print('disconnect')
-                        self.controller.disconnect()
-                except: 
-                    print('could not connect, is the device plugged in?')
-                    self.connected = False 
-            if self.connected is True: 
-                return 'Disconnect' 
-            else:
-                return 'Connect'
          
         @self.app.callback(Output('live-update-time-series', 'figure'),
                       events=[Event('interval-component', 'interval')])
@@ -332,7 +260,8 @@ class Timeseriesgui(object):
                     yaxis=dict(
                         title='Impedance (ohms)',
                         range=[y_min, y_max]
-                    )
+                    ),
+
                 )
 
                 return {'data': data, 'layout': layout}
@@ -359,6 +288,7 @@ class Timeseriesgui(object):
                         type='log',
                         autorange=True
                     ),
+
                     yaxis=dict(
                         title='Power (dB)',
                         autorange=True

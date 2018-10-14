@@ -8,6 +8,7 @@ from .modes import mode_names
 from .modes import spectroscopy
 from .modes import time_series
 from .modes import imaging
+from .modes import fw
 
 class runGui(object):
 
@@ -16,6 +17,20 @@ class runGui(object):
         # Both controller and app have to be passed to the dynamically loaded page to enable callbacks and functionality with the rest of the package. 
         self.controller = controller
         self.app = None
+
+        self.controller.register(
+            "recording_state_changed",
+            self.on_record_state_changed
+        )
+
+        self.controller.register(
+            "connection_state_changed",
+            self.on_connection_state_changed
+        )
+
+        self.connected = False
+        self.recording = False 
+
         self.app = dash.Dash()
         self.app.css.config.serve_locally = True
         self.app.scripts.config.serve_locally = True
@@ -31,6 +46,11 @@ class runGui(object):
 
         self.imaging_display = imaging.Tomogui(self.controller,self.app)
         self.imaginglayout = self.imaging_display.return_layout()   
+
+
+        self.fw_display = fw.FWgui(self.controller,self.app)
+        self.fwlayout = self.fw_display.return_layout()  
+
 
     def run(self):
 
@@ -55,10 +75,22 @@ class runGui(object):
                 href='/'
                 ),
                 # navbar links
-                html.Div(id='navbar-links', className='btn-group')
+                html.Div(id='navbar-links', className='btn-group'),
+
+
+                html.Div([
+                    html.Pre('    '),
+                    html.Button(
+                        id='recordbutton',
+                        className='btn btn-light'),
+                    ], className='btn-group'),
+
             ], className='navbar navbar-expand-lg navbar-dark bg-dark'), 
 
             dcc.Location(id='url', refresh=False),
+
+
+
 
             # this is the page that appears when the buttons are pressed. 
             html.Div([
@@ -77,6 +109,27 @@ class runGui(object):
             static_folder = os.path.join(os.getcwd(), 'static')
             return send_from_directory(static_folder, path)
 
+        @self.app.callback( 
+            dash.dependencies.Output('recordbutton', 'children'),
+            [dash.dependencies.Input('recordbutton', 'n_clicks')])
+        def callback_dropdown(n_clicks):
+            print ('savebutton callback')
+            if n_clicks is not None:
+                try: 
+                    if self.recording == False:
+                        print('start recording')
+                        self.controller.start_recording()
+                    else:
+                        print ('stop recording')
+                        self.controller.stop_recording()
+                except: 
+                    print('could not record')
+                    self.recording = False 
+            if self.recording is True: 
+                return 'Stop Recording' 
+            else:
+                return 'Record'
+
         # This displays the page, it should also pass the app and controller info to the class. 
         @self.app.callback(Output('page-content', 'children'),
                       [Input('url', 'pathname')])
@@ -91,9 +144,10 @@ class runGui(object):
                         layout = html.Div([self.bislayout])
                     elif mode.name == 'TimeSeries':
                         layout = html.Div([self.time_serieslayout ])
-                    else:
+                    elif mode.name == 'Imaging':
                         layout = html.Div([self.imaginglayout])
-
+                    else:
+                        layout = html.Div([self.fwlayout])
             return layout
 
  
@@ -117,3 +171,15 @@ class runGui(object):
             return navbar_links
 
         self.app.run_server(debug=True)
+
+    def on_connection_state_changed(self, connected):
+        if connected:
+            self.connected = True
+        else:
+            self.connected = False 
+
+    def on_record_state_changed(self, recording):
+        if recording:
+            self.recording = True
+        else:
+            self.recording = False 
