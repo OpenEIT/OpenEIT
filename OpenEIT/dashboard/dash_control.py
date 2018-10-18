@@ -89,9 +89,6 @@ class runGui(object):
 
             dcc.Location(id='url', refresh=False),
 
-
-
-
             # this is the page that appears when the buttons are pressed. 
             html.Div([
                 html.Div(id='page-content')

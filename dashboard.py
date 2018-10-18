@@ -1,12 +1,11 @@
-
-# import matplotlib
-# matplotlib.use("TkAgg")
-
 import argparse
 import logging
 import OpenEIT.dashboard
 import configparser
-import Adafruit_BluefruitLE
+from OpenEIT.backend.bluetooth import Adafruit_BluefruitLE
+import serial
+import serial.tools.list_ports
+#print (Adafruit_BluefruitLE.__file__)
 
 FORMAT = '%(asctime)-15s %(message)s'
 logging.basicConfig(format=FORMAT, level=logging.INFO)

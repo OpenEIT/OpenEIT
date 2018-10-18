@@ -308,35 +308,23 @@ class CoreBluetoothProvider(Provider):
         See this Stackoverflow question for information on what the function does:
         http://stackoverflow.com/questions/20553957/how-can-i-clear-the-corebluetooth-cache-on-macos
         """
-        print ('inside cached data')
+        print ('is this it?')
         # Turn off bluetooth.
         if self._adapter.is_powered:
-            print ('turning it off')
             self._adapter.power_off()
-            print ('turned it off')
         # Delete cache files and suppress any stdout/err output.
         with open(os.devnull, 'w') as devnull:
-            print ('start of deleting files')
             subprocess.call('rm ~/Library/Preferences/com.apple.Bluetooth.plist',
                             shell=True, stdout=devnull, stderr=subprocess.STDOUT)
             subprocess.call('rm ~/Library/Preferences/ByHost/com.apple.Bluetooth.*.plist',
                             shell=True, stdout=devnull, stderr=subprocess.STDOUT)
-            print ('end of deleting files')
 
     def disconnect_devices(self, service_uuids):
         """Disconnect any connected devices that have any of the specified
         service UUIDs.
         """
-        print ('disconnecting devices')
         # Get list of connected devices with specified services.
         cbuuids = map(uuid_to_cbuuid, service_uuids)
-
-        #print (dir(self._central_manager))
-        # print (self._devices.list())
-
-        # if self._central_manager is None: 
-        #     print ('nothing')
-        # else:  
         for device in self._central_manager.retrieveConnectedPeripheralsWithServices_(cbuuids):
             self._central_manager.cancelPeripheralConnection_(device)
 

@@ -85,7 +85,6 @@ class FilePlaybackDash(PlaybackStrategy):
 
         res = []
         for line in string.splitlines():
-            # print (len(line))
             data = OpenEIT.backend.parse_line(line)
             if data is not None:
                 res.append(data)
@@ -250,6 +249,12 @@ class Controller:
     def connect(self, port):
         self.serial_handler.connect(port)
         self.emit("connection_state_changed", True)
+
+    def return_line(self):
+        return self.serial_handler.return_last_line()
+
+    def serial_write(self, text):
+        self.serial_handler.write(text)
 
     def disconnect(self):
         if self.playback is not None:

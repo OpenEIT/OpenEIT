@@ -37,7 +37,7 @@ from ..platform import get_provider
 
 from .metadata import CoreBluetoothMetadata
 from .objc_helpers import uuid_to_cbuuid
-
+import libdispatch
 
 # Load CoreBluetooth bundle.
 objc.loadBundle("CoreBluetooth", globals(),
@@ -237,9 +237,32 @@ class CoreBluetoothProvider(Provider):
         """
         # Setup the central manager and its delegate.
         self._central_manager = CBCentralManager.alloc()
+        # I added this to enable mainloop to run in a background thread. 
+        dispatch_queue = libdispatch.dispatch_queue_create(b'q', None)
+
         self._central_manager.initWithDelegate_queue_options_(self._central_delegate,
-                                                              None, None)
+                                                              dispatch_queue, None)
         # Add any connected devices to list of known devices.
+
+    # class EventLoopThread(threading.Thread):
+    #     def __init__(self,target):
+    #         super(EventLoopThread, self).__init__()
+    #         self.setDaemon(True)
+    #         self.should_stop = False
+    #         # # Create background thread to run user code.
+    #         # self._user_thread = threading.Thread(target=self._user_thread_main,
+    #         #                                      args=(target,))
+    #         # self._user_thread.daemon = True
+    #         # self._user_thread.start()
+
+    #     def run(self):
+    #         logging.info('Starting event loop on background thread')
+    #         AppHelper.runConsoleEventLoop(installInterrupt=True)
+
+
+    #     def stop(self):
+    #         logging.info('Stop the event loop')
+    #         AppHelper.stopEventLoop()
 
 
     def run_mainloop_with(self, target):
@@ -268,6 +291,7 @@ class CoreBluetoothProvider(Provider):
         except KeyboardInterrupt:
             AppHelper.stopEventLoop()
             sys.exit(0)
+
 
     def _user_thread_main(self, target):
         """Main entry point for the thread that will run user's code."""
@@ -308,24 +332,34 @@ class CoreBluetoothProvider(Provider):
         See this Stackoverflow question for information on what the function does:
         http://stackoverflow.com/questions/20553957/how-can-i-clear-the-corebluetooth-cache-on-macos
         """
+        #print ('inside cached data')
         # Turn off bluetooth.
         if self._adapter.is_powered:
+            #print ('turning it off')
             self._adapter.power_off()
+            #print ('turned it off')
         # Delete cache files and suppress any stdout/err output.
         with open(os.devnull, 'w') as devnull:
+            #print ('start of deleting files')
             subprocess.call('rm ~/Library/Preferences/com.apple.Bluetooth.plist',
                             shell=True, stdout=devnull, stderr=subprocess.STDOUT)
             subprocess.call('rm ~/Library/Preferences/ByHost/com.apple.Bluetooth.*.plist',
                             shell=True, stdout=devnull, stderr=subprocess.STDOUT)
+            #print ('end of deleting files')
 
     def disconnect_devices(self, service_uuids):
         """Disconnect any connected devices that have any of the specified
         service UUIDs.
         """
+
         # Get list of connected devices with specified services.
         cbuuids = map(uuid_to_cbuuid, service_uuids)
+
+        # print (dir(self._central_manager))
+        # print (self._devices.list())
         for device in self._central_manager.retrieveConnectedPeripheralsWithServices_(cbuuids):
             self._central_manager.cancelPeripheralConnection_(device)
+
 
 
 # Stop circular references by importing after classes that use these types.

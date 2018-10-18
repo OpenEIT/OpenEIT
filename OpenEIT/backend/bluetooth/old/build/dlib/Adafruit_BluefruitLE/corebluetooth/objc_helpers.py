@@ -1,4 +1,4 @@
-# Global configuration.
+# Objective-C helper functions to convert between Python and Objective-C types.
 # Author: Tony DiCola
 #
 # Copyright (c) 2015 Adafruit Industries
@@ -20,8 +20,31 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import uuid
+from binascii import hexlify
+
+import objc
 
 
-# Default timeout for an action which waits for something to happen, like
-# connecting or discovering services.
-TIMEOUT_SEC = 10
+# Load CoreBluetooth bundle.
+objc.loadBundle("CoreBluetooth", globals(),
+    bundle_path=objc.pathForFramework(u'/System/Library/Frameworks/IOBluetooth.framework/Versions/A/Frameworks/CoreBluetooth.framework'))
+
+
+def cbuuid_to_uuid(cbuuid):
+    """Convert Objective-C CBUUID type to native Python UUID type."""
+    data = cbuuid.data().bytes()
+
+    template = '{:0>8}-0000-1000-8000-00805f9b34fb' if len(data) <= 4 else '{:0>32}'
+    value = template.format(hexlify(data.tobytes()[:16]).decode('ascii'))
+    return uuid.UUID(hex=value)
+
+
+def uuid_to_cbuuid(uuid):
+    """Convert native Python UUID type to Objective-C CBUUID type."""
+    return CBUUID.UUIDWithString_(str(uuid))
+
+
+def nsuuid_to_uuid(nsuuid):
+    """Convert Objective-C NSUUID type to native Python UUID type."""
+    return uuid.UUID(nsuuid.UUIDString())

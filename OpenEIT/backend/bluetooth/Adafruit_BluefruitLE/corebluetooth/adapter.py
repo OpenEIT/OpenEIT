@@ -74,6 +74,11 @@ class CoreBluetoothAdapter(Adapter):
         # Mac OSX has no oncept of BLE adapters so just return a fixed value.
         return "Default Adapter"
 
+    @property
+    def address(self):
+        """Return the address of this BLE network adapter."""
+        return self._props.Get(_INTERFACE, 'Address')
+        
     def start_scan(self, timeout_sec=TIMEOUT_SEC):
         """Start scanning for BLE devices."""
         get_provider()._central_manager.scanForPeripheralsWithServices_options_(None, None)
@@ -93,17 +98,27 @@ class CoreBluetoothAdapter(Adapter):
 
     def power_on(self, timeout_sec=TIMEOUT_SEC):
         """Power on Bluetooth."""
+        #print ('powering on')
         # Turn on bluetooth and wait for powered on event to be set.
         self._powered_on.clear()
+        #print ('cleared on')
         IOBluetoothPreferenceSetControllerPowerState(1)
+        #print ('turned power state to 1')
+        #self._powered_on.set()
+        #print ('forced powered on to be set')
         if not self._powered_on.wait(timeout_sec):
             raise RuntimeError('Exceeded timeout waiting for adapter to power on!')
 
     def power_off(self, timeout_sec=TIMEOUT_SEC):
         """Power off Bluetooth."""
+        #print ('entered power off function')
         # Turn off bluetooth.
         self._powered_off.clear()
+        #print ('cleared off')
         IOBluetoothPreferenceSetControllerPowerState(0)
+        #print ('power state 0')
+        #self._powered_off.set()
+        #print ('forced powered off to be set')
         if not self._powered_off.wait(timeout_sec):
             raise RuntimeError('Exceeded timeout waiting for adapter to power off!')
 
