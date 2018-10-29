@@ -3,7 +3,7 @@ import queue
 import os
 import OpenEIT.reconstruction
 import OpenEIT.backend
-# logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 # PORT = 8050
 

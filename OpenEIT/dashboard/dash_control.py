@@ -1,4 +1,5 @@
 import dash 
+import logging
 from dash.dependencies import Input, Output
 import dash_html_components as html
 import dash_core_components as dcc
@@ -9,6 +10,8 @@ from .modes import spectroscopy
 from .modes import time_series
 from .modes import imaging
 from .modes import fw
+
+logger = logging.getLogger(__name__)
 
 class runGui(object):
 

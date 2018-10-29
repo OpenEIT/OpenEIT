@@ -81,6 +81,7 @@ class Tomogui(object):
 
         try:
             self.img = self.controller.image_queue.get_nowait()
+            # print (self.img)
         except queue.Empty:
             pass
         else:
@@ -391,7 +392,7 @@ class Tomogui(object):
 
             if self.algorithm  == 'greit':
                 self.gx,self.gy,self.ds = self.controller.greit_params()
-                self.img = self.ds # numpy.zeros((32,32),dtype=float)
+                #self.img = self.ds # numpy.zeros((32,32),dtype=float)
                 # If algorithm is GREIT 
                 layout = go.Layout(
                     width = 500,
@@ -437,7 +438,7 @@ class Tomogui(object):
                 ]
             else: 
                 self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
-                self.img = numpy.zeros(self.x.shape[0])
+                #self.img = numpy.zeros(self.x.shape[0])
 
                 camera = dict(
                     up=dict(x=0, y=0, z=1),

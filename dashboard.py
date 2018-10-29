@@ -29,7 +29,6 @@ def main():
     n_el        = configParser.get('hardware-config', 'n_el')
     algorithm   = configParser.get('software-config', 'algorithm')
     mode        = configParser.get('software-config', 'mode')
-    #fwsequence  = configParser.get('software-config', 'fwsequence')    
 
     ap = argparse.ArgumentParser()
 
@@ -52,7 +51,6 @@ def main():
         n_el= n_el,
         algorithm=algorithm,
         mode=mode
-        #fwsequence=fwsequence
     )
 
     gui = OpenEIT.dashboard.runGui(controller)
