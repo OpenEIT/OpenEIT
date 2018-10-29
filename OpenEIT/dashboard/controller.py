@@ -3,15 +3,6 @@ import queue
 import os
 import OpenEIT.reconstruction
 import OpenEIT.backend
-
-# import dash
-# from dash.dependencies import Output, Event
-# import dash_core_components as dcc
-# import dash_html_components as html
-# import plotly.plotly as py
-# import plotly.graph_objs as go
-# from flask import request
-
 # logger = logging.getLogger(__name__)
 
 # PORT = 8050
@@ -159,21 +150,15 @@ class Controller:
         # setup the queues for the workers
         self._data_queue  = queue.Queue()
         self._image_queue = queue.Queue()
-
-        self.choice = 'a'
+        self._mode='c'
+        self.playback = None
 
         # instantiate the serial handler. It should be instantiated knowing what sort of data it is expecting. 
-        self.serial_handler = OpenEIT.backend.SerialHandler(self._data_queue,self.choice)
-
-        self.playback = None
-        self._n_el = 8
-        self._algorithm ='bp'
-        self._mode='singlefrequency'
-        self._fwsequence='e_conf.txt'  
+        self.serial_handler = OpenEIT.backend.SerialHandler(self._data_queue,self._mode)
 
 
     def configure(self, *, initial_port=None, virtual_tty=False,
-                 read_file=False,n_el=8,algorithm='bp',mode='singlefrequency',fwsequence='e_conf.txt'):
+                 read_file=False,n_el=8,algorithm='bp',mode='singlefrequency'):
 
         if initial_port is not None:
             if virtual_tty:
@@ -191,9 +176,12 @@ class Controller:
 
         self._n_el=int(n_el)
         self._algorithm=algorithm
-        self._mode=mode
-        self._fwsequence=fwsequence      
- 
+        self._mode=mode   
+
+        # set the mode for everything. 
+        self.serial_setmode(mode)
+        self.serial_port_name = '' 
+
         self.image_reconstruct = OpenEIT.reconstruction.ReconstructionWorker(
             self._data_queue,
             self._image_queue,
@@ -204,7 +192,9 @@ class Controller:
         if self._algorithm == 'jac' or self._algorithm == 'bp': 
             self.x,self.y,self.tri,self.el_pos = self.image_reconstruct.get_plot_params()
         if self._algorithm == 'greit':
-            self.gx,self.gy,self.ds = self.image_reconstruct.get_greit_params()  
+            self.gx,self.gy,self.ds = self.image_reconstruct.get_greit_params() 
+
+
         self.image_reconstruct.start()
 
 
@@ -232,7 +222,6 @@ class Controller:
         return self.gx,self.gy,self.ds   
 
     def baseline(self):
-
         self.image_reconstruct.baseline()
 
     def reset_baseline(self):
@@ -248,13 +237,23 @@ class Controller:
 
     def connect(self, port):
         self.serial_handler.connect(port)
+        self.serial_port_name = port
         self.emit("connection_state_changed", True)
 
+    def getportname(self):
+        return self.serial_port_name
+        
     def return_line(self):
         return self.serial_handler.return_last_line()
 
     def serial_write(self, text):
         self.serial_handler.write(text)
+
+    def serial_setmode(self, text):
+        self.serial_handler.setmode(text)
+
+    def serial_getmode(self):
+        return self.serial_handler.getmode()
 
     def disconnect(self):
         if self.playback is not None:

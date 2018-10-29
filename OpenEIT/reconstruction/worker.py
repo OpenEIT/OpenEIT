@@ -32,15 +32,14 @@ class ReconstructionWorker(threading.Thread):
         self._output_queue  = output_queue
         self._running       = True
         self._algorithm     = algorithm
-        self._baseline      = 0 
+
+        self._baseline      = 1 
         if self._algorithm == 'bp':
             self._reconstruction = BpReconstruction(n_el)
         elif self._algorithm  == 'greit':
             self._reconstruction = GreitReconstruction(n_el)
         elif self._algorithm  == 'jac':
             self._reconstruction = JacReconstruction(n_el)
-        else: # radon transform here is for 8 electrodes only. 
-            self._reconstruction = RadonReconstruction()
 
     def baseline(self):
         self._baseline = 1
@@ -73,9 +72,12 @@ class ReconstructionWorker(threading.Thread):
             # preprocess the data to exclude zero values? 
             data = [1.0 if x == 0 else x for x in data]
 
+            print (len(data))
+            
             if self._baseline == 1: 
                 self._reconstruction.update_reference(data)
                 self._baseline = 0
+
             try:
                 before = time.time()
                 img = self._reconstruction.eit_reconstruction(data)

@@ -10,7 +10,7 @@ import serial.tools.list_ports
 FORMAT = '%(asctime)-15s %(message)s'
 logging.basicConfig(format=FORMAT, level=logging.INFO)
 logger = logging.getLogger(__name__)
-# 
+
 # Get the BLE provider for the current platform.
 ble = Adafruit_BluefruitLE.get_provider()
 
@@ -29,7 +29,7 @@ def main():
     n_el        = configParser.get('hardware-config', 'n_el')
     algorithm   = configParser.get('software-config', 'algorithm')
     mode        = configParser.get('software-config', 'mode')
-    fwsequence  = configParser.get('software-config', 'fwsequence')    
+    #fwsequence  = configParser.get('software-config', 'fwsequence')    
 
     ap = argparse.ArgumentParser()
 
@@ -51,8 +51,8 @@ def main():
         virtual_tty=args.virtual_tty,
         n_el= n_el,
         algorithm=algorithm,
-        mode=mode,
-        fwsequence=fwsequence
+        mode=mode
+        #fwsequence=fwsequence
     )
 
     gui = OpenEIT.dashboard.runGui(controller)

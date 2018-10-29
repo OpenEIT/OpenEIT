@@ -20,7 +20,7 @@ import base64
 
 PORT = 8050
 S_TO_MS = 1000
-PLOT_REFRESH_INTERVAL = 0.5 * S_TO_MS
+PLOT_REFRESH_INTERVAL = 1.0 * S_TO_MS
 
 # _LOGGER = logging.getLogger(__name__)
 # _LOGGER.setLevel(logging.DEBUG)
@@ -59,14 +59,10 @@ class Tomogui(object):
         full_ports = list(serial.tools.list_ports.comports())
         self.portnames  = [item[0] for item in full_ports]
 
-        # b followed by \r gives bioimpedance spectroscopy data. 
-        # self.freqs = [200,500,800,1000,2000,5000,8000,10000,15000,20000,30000,40000,50000,60000,70000]
-        # self.psd   = [0,0,0,0,0,0,0,0,0,0,0,0,0,0] 
-        # self.data_dict = {}
-        # self.data_dict = dict(zip(self.freqs, self.psd))
-
         self.vmin = 0 
         self.vmax = 1000
+
+        self.mode = self.controller.serial_getmode()
 
         self.rsvaluemin = self.vmin
         self.rsvaluemax = self.vmax
@@ -89,16 +85,6 @@ class Tomogui(object):
             pass
         else:
             logger.info("rendering new image ...")
-            # before = time.time()
-            print ('new image is available')
-            # self.update_figure()
-            # self.text = 'render time: %.2f' % (
-            #     time.time() - before)
-            # logger.info(self.text)
-
-        # How do we check if the image has changed?     
-        # self.img = 1.1*self.img     
-
 
     def dist_origin(self,x, y, z):
         return z
@@ -242,8 +228,6 @@ class Tomogui(object):
                         interval=PLOT_REFRESH_INTERVAL
                     ),
                     ] , style={'width': '50%', 'display': 'inline-block','text-align': 'center'}), 
-
-
 
 
                 ], style={'width': '100%', 'display': 'inline-block'} ),
@@ -401,12 +385,13 @@ class Tomogui(object):
                else: 
                     self.run_file = False
 
-            # if there is data on the queue, do an update. 
-            self.process_data()
+            if self.mode == 'c':
+                # if there is data on the queue, do an update. 
+                self.process_data()
 
             if self.algorithm  == 'greit':
-                # self.gx,self.gy,self.ds = self.controller.greit_params()
-                # self.img = self.ds # numpy.zeros((32,32),dtype=float)
+                self.gx,self.gy,self.ds = self.controller.greit_params()
+                self.img = self.ds # numpy.zeros((32,32),dtype=float)
                 # If algorithm is GREIT 
                 layout = go.Layout(
                     width = 500,
@@ -452,15 +437,14 @@ class Tomogui(object):
                 ]
             else: 
                 self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
-                #self.gx,self.gy,self.ds = self.controller.greit_params()
-                #self.img = self.ds # numpy.zeros((32,32),dtype=float)
-                #self.img = numpy.zeros(self.x.shape[0]) 
- 
+                self.img = numpy.zeros(self.x.shape[0])
+
                 camera = dict(
                     up=dict(x=0, y=0, z=1),
                     center=dict(x=0, y=0, z=0),
                     eye=dict(x=0.0, y=0.0, z=2.5)
                 )
+
 
                 noaxis=dict(showbackground=False,
                             showline=False,
@@ -485,14 +469,13 @@ class Tomogui(object):
                             )
 
                         )
-
-                self.img[0] = 5 
+                self.img[1] = 2.0
                 data = FF.create_trisurf(x=self.x, y=self.y, z=self.img,
                                          simplices=self.tri,
                                          color_func=self.dist_origin, # this is equivalent to the mask in tripcolor. 
                                          colormap='Portland',
                                          show_colorbar=False,
-                                         title="mesh",
+                                         title="Mesh Reconstruction",
                                          aspectratio=dict(x=1.0, y=1.0, z=0.01),
                                          showbackground=False,
                                          plot_edges=False,
@@ -500,26 +483,17 @@ class Tomogui(object):
                                          scale=None,
                                          ) 
 
-
             return {'data': data, 'layout': layout}
 
         @self.app.callback(
             Output('live-update-histogram', 'figure'),
             events=[Event('interval-component', 'interval')])
         def update_graph_scatter():
-            # update the data queue. 
-            # self.process_data()
-            # this is just dummy data filling in here for now, later it should be the updated img data. 
-            # 
-            #self.gx,self.gy,self.ds = self.controller.greit_params()
-            #self.img = self.ds # numpy.zeros((32,32),dtype=float)
 
-            #self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
-            #self.img = numpy.zeros(self.x.shape[0]) 
+            # print (self.img)
 
             nanless = self.img[~numpy.isnan(self.img)]
             flatimg = (nanless).flatten()
-            # print (flatimg)
 
             data = [go.Histogram(x=flatimg)]
 
@@ -546,6 +520,7 @@ class Tomogui(object):
             nanless = self.img[~numpy.isnan(self.img)]
             self.vmax= float(int(numpy.max(nanless)*100))/100.0
             self.vmin =float(int(numpy.min(nanless)*100))/100.0
+
 
             self.rsvaluemin = self.vmin
             self.rsvaluemax = self.vmax

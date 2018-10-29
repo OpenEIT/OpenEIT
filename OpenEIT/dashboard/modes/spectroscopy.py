@@ -46,7 +46,7 @@ class BISgui(object):
         self.currentport = ''
         full_ports = list(serial.tools.list_ports.comports())
         self.portnames  = [item[0] for item in full_ports]
-
+        self.mode = self.controller.serial_getmode()
         # b followed by \r gives bioimpedance spectroscopy data. 
         self.freqs = [200,500,800,1000,2000,5000,8000,10000,15000,20000,30000,40000,50000,60000,70000]
         self.psd   = [0,0,0,0,0,0,0,0,0,0,0,0,0,0] 
@@ -92,8 +92,9 @@ class BISgui(object):
             Output('live-update-spectrogram', 'figure'),
             events=[Event('interval-component', 'interval')])
         def update_graph_scatter():
-            # update the data queue. 
-            self.process_data()
+            if self.mode == 'b':
+                # update the data queue. 
+                self.process_data()
 
             if len(self.data_dict.keys()) > 0:
                 trace1 = go.Scatter(

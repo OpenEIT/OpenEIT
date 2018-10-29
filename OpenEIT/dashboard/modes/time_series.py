@@ -113,7 +113,7 @@ class Timeseriesgui(object):
         self.currentport    = ''
         full_ports          = list(serial.tools.list_ports.comports())
         self.portnames      = [item[0] for item in full_ports]
-
+        self.mode = self.controller.serial_getmode()
         self.canned_data_interval = 1/SAMPLING_FREQUENCY
         self.tdelta = timedelta(seconds=self.canned_data_interval)
         # Filtered data True or False. 
@@ -222,8 +222,9 @@ class Timeseriesgui(object):
         @self.app.callback(Output('live-update-time-series', 'figure'),
                       events=[Event('interval-component', 'interval')])
         def update_graph_scatter():
-            # update from the data queue. 
-            self.process_data()
+            if self.mode == 'a':
+                # update from the data queue. 
+                self.process_data()
 
             if len(self.x) > 0:
                 trace1 = go.Scatter(

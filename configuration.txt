@@ -1,8 +1,7 @@
 [hardware-config]
-n_el=32		  				
+n_el=16   				
 [software-config]
 algorithm=greit
-mode=meshgui
-fwsequence=e_conf_32.txt  
+mode=c
 
 

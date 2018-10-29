@@ -47,7 +47,6 @@ class runGui(object):
         self.imaging_display = imaging.Tomogui(self.controller,self.app)
         self.imaginglayout = self.imaging_display.return_layout()   
 
-
         self.fw_display = fw.FWgui(self.controller,self.app)
         self.fwlayout = self.fw_display.return_layout()  
 
@@ -77,13 +76,14 @@ class runGui(object):
                 # navbar links
                 html.Div(id='navbar-links', className='btn-group'),
 
-
                 html.Div([
                     html.Pre('    '),
                     html.Button(
+                        'Record',
                         id='recordbutton',
+                        #type ='submit',
                         className='btn btn-light'),
-                    ], className='btn-group'),
+                ], className='btn-group'),
 
             ], className='navbar navbar-expand-lg navbar-dark bg-dark'), 
 
@@ -110,28 +110,26 @@ class runGui(object):
             dash.dependencies.Output('recordbutton', 'children'),
             [dash.dependencies.Input('recordbutton', 'n_clicks')])
         def callback_dropdown(n_clicks):
-            print ('savebutton callback')
             if n_clicks is not None:
-                try: 
-                    if self.recording == False:
-                        print('start recording')
+                if self.recording == False:
+                    if self.connected == True: 
                         self.controller.start_recording()
-                    else:
-                        print ('stop recording')
-                        self.controller.stop_recording()
-                except: 
-                    print('could not record')
-                    self.recording = False 
-            if self.recording is True: 
-                return 'Stop Recording' 
-            else:
+                        return 'Stop Recording'
+                    else: 
+                        print ('comms not connected')
+                        return 'Record'
+                else:
+                    print ('stop recording')
+                    self.controller.stop_recording()
+                    return 'Record'
+            else: 
                 return 'Record'
 
         # This displays the page, it should also pass the app and controller info to the class. 
         @self.app.callback(Output('page-content', 'children'),
                       [Input('url', 'pathname')])
         def display_page(pathname):
-            layout = page_not_found.layout
+            layout = html.Div([self.fwlayout]) #page_not_found.layout
             for mode in mode_names:
                 if pathname == mode.url:
                     print (mode.name)

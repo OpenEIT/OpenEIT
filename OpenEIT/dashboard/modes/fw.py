@@ -49,18 +49,14 @@ class FWgui(object):
         self.currentport = ''
         full_ports = list(serial.tools.list_ports.comports())
         self.portnames  = [item[0] for item in full_ports]
-
+        self.data = ''
         self.layout = []
-
 
     # Get's new data off the serial port. 
     def process_data(self):
         while not self.controller.data_queue.empty():
-            f,amp = self.controller.data_queue.get()
-            self.data_dict[f] = amp
-
-        self.freqs = list(self.data_dict.keys())
-        self.psd   = list(self.data_dict.values())
+            self.data = self.controller.data_queue.get()
+            #self.data_dict[f] = amp
 
     def return_layout(self):
         self.layout = html.Div( [
@@ -133,18 +129,13 @@ class FWgui(object):
                     interval=PLOT_REFRESH_INTERVAL
                 ),
 
-            ] )      
+            ] )     
 
         @self.app.callback(
             Output('textarea', 'value'),
             events=[Event('interval-component', 'interval')])
         def update_textbox():
-
             return self.controller.return_line()
-            # if self.connected: 
-            #     print ('connected to serial')
-            # else: 
-            #     return 'not connected'
 
         @self.app.callback(
             Output('datasent', 'children'),
@@ -154,10 +145,9 @@ class FWgui(object):
         def senddata(n_clicks,value):
             if n_clicks is not None:
                 if self.connected: 
-                    print (value)
-                    data_to_send = str(value) + '\r'
+                    data_to_send = str(value)
                     self.controller.serial_write(data_to_send)
-                    print ('we are sending data')
+                    print (data_to_send)
                     return data_to_send
 
             return 'connect to send data'
@@ -166,9 +156,13 @@ class FWgui(object):
             Output('current_mode', 'children'),
             events=[Event('interval-component', 'interval')])   
         def mode():
-
-            return 'current mode'            
-
+            m = self.controller.serial_getmode()
+            if m == 'a':
+                return 'time series mode'
+            elif m == 'b':
+                return 'bioimpedance spectroscopy mode'
+            else: 
+                return 'imaging mode'         
 
         @self.app.callback(
             Output(component_id='connectbuttonfw', component_property='children'),
@@ -181,12 +175,13 @@ class FWgui(object):
                     if self.connected == False:
                         print('connect')
                         self.controller.connect(str(dropdown_value))
+                        return 'Disconnect' 
                     else:
                         print('disconnect')
                         self.controller.disconnect()
+                        return 'Connect'
                 except: 
-                    print('could not connect, is the device plugged in?')
-                    self.connected = False 
+                    print ('problem')
             if self.connected is True: 
                 return 'Disconnect' 
             else:
@@ -199,6 +194,10 @@ class FWgui(object):
             self.connected = True
         else:
             self.connected = False 
+        # calling the print update.     
+        dv=''
+        connect(2,dv)
+
 
     def on_record_state_changed(self, recording):
         if recording:
