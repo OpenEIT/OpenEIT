@@ -31,14 +31,21 @@ class JacReconstruction:
         self.baseline_flag = 1
         self.n_el = n_el # number of electrodes. 
         self.n_el = n_el # number of electrodes. 
-        self.step = int(self.n_el/2) # random initialize number 
+        # self.step = int(self.n_el/2) # random initialize number 
+        # self.el_dist = self.step
+        #
+        # This makes for a different number of points. 192 not 224... 
+        self.el_dist = int(self.n_el/2)
+        self.step = 1 # 
+        # 
         # we create this according to an opposition protocol to maximize contrast. 
-        self.ex_mat = eit_scan_lines(ne = self.n_el, dist = self.step)
+        self.ex_mat = eit_scan_lines(ne = self.n_el, dist = self.el_dist)
+
         """ 0. construct mesh """
         # h0 is initial mesh size. , h0=0.1
         self.mesh_obj, self.el_pos = mesh.create(n_el)
         """ 3. Set Up JAC """
-        self.eit = jac(self.mesh_obj,  self.el_pos, ex_mat=self.ex_mat, step=self.step, perm=1., parser='std')
+        self.eit = jac(self.mesh_obj, self.el_pos, ex_mat=self.ex_mat, step=self.step, perm=1., parser='std')
         # parameter tuning is needed for better EIT images
         self.eit.setup(p=0.5, lamb=0.5, method='kotre')
         logger.info("JAC mesh set up ")

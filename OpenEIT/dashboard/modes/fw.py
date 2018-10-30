@@ -194,10 +194,6 @@ class FWgui(object):
             self.connected = True
         else:
             self.connected = False 
-        # calling the print update.     
-        dv=''
-        connect(2,dv)
-
 
     def on_record_state_changed(self, recording):
         if recording:

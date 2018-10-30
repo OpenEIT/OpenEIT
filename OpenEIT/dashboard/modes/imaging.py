@@ -53,6 +53,7 @@ class Tomogui(object):
             "connection_state_changed",
             self.on_connection_state_changed
         )
+
         self.connected = False
         self.recording = False 
         self.currentport = ''
@@ -81,7 +82,6 @@ class Tomogui(object):
 
         try:
             self.img = self.controller.image_queue.get_nowait()
-            # print (self.img)
         except queue.Empty:
             pass
         else:
@@ -98,18 +98,6 @@ class Tomogui(object):
         self.run_file = True
         # this should be a bool so that self. controller.step_file is called every update interval. 
         # self.controller.step_file()
-
-    def on_connection_state_changed(self, connected):
-        if connected:
-            self.connected = True
-        else:
-            self.connected = False 
-
-    def on_record_state_changed(self, recording):
-        if recording:
-            self.recording = True
-        else:
-            self.recording = False 
 
     def return_layout(self):
 
@@ -383,15 +371,18 @@ class Tomogui(object):
             if self.run_file is True: 
                if self.controller.step_file():
                   print ('stepped the file')
+                  # self.process_data()
                else: 
                     self.run_file = False
 
-            if self.mode == 'c':
+            if self.mode == 'c': # and self.run_file is False:
+                print ('processed the data')
                 # if there is data on the queue, do an update. 
                 self.process_data()
 
             if self.algorithm  == 'greit':
                 self.gx,self.gy,self.ds = self.controller.greit_params()
+                print (self.img)
                 #self.img = self.ds # numpy.zeros((32,32),dtype=float)
                 # If algorithm is GREIT 
                 layout = go.Layout(
@@ -439,6 +430,7 @@ class Tomogui(object):
             else: 
                 self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
                 #self.img = numpy.zeros(self.x.shape[0])
+                # print (self.img)
 
                 camera = dict(
                     up=dict(x=0, y=0, z=1),
@@ -527,7 +519,17 @@ class Tomogui(object):
             self.rsvaluemax = self.vmax
             display_controls(self.vmin,self.vmax)
 
-
         return self.layout
 
+    def on_connection_state_changed(self, connected):
+        if connected:
+            self.connected = True
+        else:
+            self.connected = False 
+
+    def on_record_state_changed(self, recording):
+        if recording:
+            self.recording = True
+        else:
+            self.recording = False 
 

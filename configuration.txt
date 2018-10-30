@@ -1,7 +1,7 @@
 [hardware-config]
-n_el=16   				
+n_el=8   				
 [software-config]
-algorithm=greit
+algorithm=jac
 mode=c
 
 

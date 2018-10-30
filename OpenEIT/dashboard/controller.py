@@ -292,7 +292,6 @@ class Controller:
         if self.serial_handler.recording:
             logger.info('it is already recording')
             return
-
         self.serial_handler.start_recording()
         self.emit("recording_state_changed", True)
         logger.info('started recording here')

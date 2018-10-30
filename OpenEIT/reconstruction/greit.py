@@ -30,15 +30,17 @@ class GreitReconstruction:
         self.img = []
         self.baseline_flag = 1
         self.n_el = n_el # number of electrodes. 
-        self.step = int(self.n_el/2) # random initialize number 
+        self.el_dist = int(self.n_el/2) # random initialize number 
+        self.step = 1
         # we create this according to an opposition protocol to maximize contrast. 
-        self.ex_mat = eit_scan_lines(ne = self.n_el, dist = self.step)
+        self.ex_mat = eit_scan_lines(ne = self.n_el, dist = self.el_dist)
         """ 0. construct mesh """
         # h0 is initial mesh size. , h0=0.1
         self.mesh_obj, self.el_pos = mesh.create(self.n_el)
         """ 3. Set Up GREIT """
         self.eit = greit(self.mesh_obj, self.el_pos, ex_mat=self.ex_mat, step=self.step, parser='std')
-        self.eit.setup(p=0.50, lamb=0.5,n=self.n_el)
+        #self.eit.setup(p=0.50, lamb=0.5,n=self.n_el)
+        self.eit.setup(p=0.50, lamb=0.05,n=self.n_el)
         logger.info("GREIT mesh set up ")
         self.gx = None
         self.gy = None
