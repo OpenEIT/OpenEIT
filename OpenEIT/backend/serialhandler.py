@@ -391,7 +391,7 @@ class SerialHandler:
             print('recording started!!')
             timestr = time.strftime("%Y%m%d-%H%M%S")
             self._recording = True
-            self._record_file = open('data_' + timestr + '.bin', 'a')
+            self._record_file = open('data_' + timestr + '.txt', 'a')
 
     def stop_recording(self):
         with self._recording_lock:
