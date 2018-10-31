@@ -376,7 +376,7 @@ class Tomogui(object):
                     self.run_file = False
 
             if self.mode == 'c': # and self.run_file is False:
-                print ('processed the data')
+                # print ('processed the data')
                 # if there is data on the queue, do an update. 
                 self.process_data()
 

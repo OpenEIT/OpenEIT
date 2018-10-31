@@ -1,5 +1,5 @@
 [hardware-config]
-n_el=8   				
+n_el=16  				
 [software-config]
 algorithm=jac
 mode=c
