@@ -21,8 +21,9 @@ python app.py
 You should now see the server running through the console at a server location accessible by any internet browser at Running on http://127.0.0.1:8050/. To see the dashboard open a browser window(I use chrome) to this address.
 
 The dashboard should now be open and running and look like this: 
-![alt text](images/software.png "EIT Dashboard"){:width="300px"}
+![alt text](images/software.png "EIT Dashboard")
 
+<img src="images/software.png" height="200">
 
 ## Functionality 
 
