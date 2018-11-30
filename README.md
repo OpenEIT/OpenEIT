@@ -27,7 +27,8 @@ The dashboard should now be open and running and look like this:
 
 ## Functionality 
 
-![alt text](images/eit32.jpeg "EIT device reconstructing location of two cups")
+![alt text](images/eit32.jpeg#center "EIT device reconstructing location of two cups")
+
 
 The dashboard can connect to the SPECTRA device via Bluetooth or Serial connection, do tomographic reconstructions in real-time, or by reading in offline data. You can also record data for later analysis. 
 
@@ -44,7 +45,7 @@ Simdata creates data in the same format as the hardware device, incase you want 
 You can also use the main software to do either time series or bioimpedance spectroscopy. Instructions for these can be found in the readthedocs tutorials. 
 
 
-<img src="images/LungscomparedtoCTScan.png" height="500">
+<img src="images/LungscomparedtoCTScan.png" height="300">
 
 ## Algorithms 
 
