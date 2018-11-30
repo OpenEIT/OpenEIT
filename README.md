@@ -47,12 +47,13 @@ Simdata creates data in the same format as the hardware device, incase you want 
 
 You can also use the main software to do either time series or bioimpedance spectroscopy. Instructions for these can be found in the readthedocs tutorials. 
 
-
-<img src="images/LungscomparedtoCTScan.png" height="300">
+<p align="center">
+	<img src="images/LungscomparedtoCTScan.png" height="300">
+</p>
 
 ## Algorithms 
 
-There are three classic EIT algorithms implemented - Back Projection, Graz Consensus and Gauss Newton Methods using the pyEIT toolbox - [pyEIT](https://github.com/liubenyuan/pyEIT). Each can be adjusted based on the materials you are detecting, to get better results. It's also possible to create 3D meshes with this software in a similar manner to EIDORS(a matlab based EIT software suite). 
+There are three classic EIT algorithms implemented - Back Projection, Graz Consensus and Gauss Newton Methods using the pyEIT toolbox - [pyEIT](https://github.com/liubenyuan/pyEIT). Each has many parameters which can be adjusted to get better results. It's also possible to create 3D meshes with this software in a similar manner to EIDORS(a matlab based EIT software suite). 
 
 
 
