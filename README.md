@@ -18,15 +18,15 @@ pip -r requirements.txt
 ```
 python app.py
 ```
-You should now see the server running through the console at a server location accessible by any internet browser at Running on http://127.0.0.1:8050/. To see the dashboard open a browser window(I use chrome) to this address: Running on http://127.0.0.1:8050/
+You should now see the server running through the console at a server location accessible by any internet browser at Running on http://127.0.0.1:8050/. To see the dashboard open a browser window(I use chrome) to this address.
 
 The dashboard should now be open and running and look like this: 
-![alt text](images/software.png "EIT Dashboard")
+![alt text](images/software.png "EIT Dashboard" = 300x)
 
 
 ## Functionality 
 
-![alt text](images/eit32.jpeg "EIT device reconstructing location of two cups")
+![alt text](images/eit32.jpeg "EIT device reconstructing location of two cups" =300x)
 
 The dashboard can connect to the SPECTRA device via Bluetooth or Serial connection, do tomographic reconstructions in real-time, or by reading in offline data. You can also record data for later analysis. 
 
