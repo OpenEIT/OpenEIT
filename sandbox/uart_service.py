@@ -1,8 +1,8 @@
 # Example of interaction with a BLE UART device using a UART service
 # implementation.
 # Author: Tony DiCola
-import Adafruit_BluefruitLE
-from Adafruit_BluefruitLE.services import UART
+from OpenEIT.backend.bluetooth import Adafruit_BluefruitLE
+from OpenEIT.backend.bluetooth.Adafruit_BluefruitLE.services import UART
 
 
 # Get the BLE provider for the current platform.
@@ -42,9 +42,7 @@ def main():
         # Make sure scanning is stopped before exiting.
         adapter.stop_scan()
 
-
-
-    print('Connecting to device...')
+    print('Connecting to ', device.name)
     device.connect()  # Will time out after 60 seconds, specify timeout_sec parameter
                       # to change the timeout.
 
@@ -55,24 +53,35 @@ def main():
         # time out after 60 seconds (specify timeout_sec parameter to override).
         print('Discovering services...')
         UART.discover(device)
-
         # Once service discovery is complete create an instance of the service
         # and start interacting with it.
         uart = UART(device)
         # dis = DeviceInformation(device)
         # Write a string to the TX characteristic.
-        uart.write('a'.encode())
-        print("Sent 'Hello world!' to the device.")
+        # uart.write('a'.encode())
+        # print("Sent 'Hello world!' to the device.")
+        while device.is_connected: 
+            if uart is not None: 
+                #uart.write(b'a')
+                newdata=uart.read(timeout_sec=1)
+                #print ('completed uart write')
+                if newdata is None:
+                    print('ReceivedNone: {0}'.format(newdata))
+                    uart.write('a\n'.encode())
+                    print ('completed uart write')
+                else: 
+                    print('Received: {0}'.format(newdata))
+                    # break
 
         # Now wait up to one minute to receive data from the device.
-        print('Waiting up to 60 seconds to receive data from the device...')
-        received = uart.read(timeout_sec=60)
-        if received is not None:
-            # Received data, print it out.
-            print('Received: {0}'.format(received))
-        else:
-            # Timeout waiting for data, None is returned.
-            print('Received no data!')
+        # print('Waiting up to 60 seconds to receive data from the device...')
+        # received = uart.read(timeout_sec=60)
+        # if received is not None:
+        #     # Received data, print it out.
+        #     print('Received: {0}'.format(received))
+        # else:
+        #     # Timeout waiting for data, None is returned.
+        #     print('Received no data!')
     finally:
         print('this is where disconnect should go')
         # dis = DeviceInformation(device)

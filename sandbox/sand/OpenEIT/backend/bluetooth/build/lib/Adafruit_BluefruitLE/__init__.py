@@ -1,1 +1,0 @@
-from .platform import get_provider

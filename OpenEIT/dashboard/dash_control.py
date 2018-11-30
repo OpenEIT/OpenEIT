@@ -10,6 +10,7 @@ from .modes import spectroscopy
 from .modes import time_series
 from .modes import imaging
 from .modes import fw
+import os 
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,8 @@ class runGui(object):
         self.fw_display = fw.FWgui(self.controller,self.app)
         self.fwlayout = self.fw_display.return_layout()  
 
+        logger.info("openeit_server_started")
+
 
     def run(self):
 
@@ -68,7 +71,7 @@ class runGui(object):
                 dcc.Link(
                 html.Div([
                     html.Img(
-                        src='/static/logo-white.png',
+                        src='static/logo-white.png',
                         style={'height': 30, 'margin-right': 10}),
                     'OpenEIT Dashboard'
                 ]),
@@ -102,7 +105,7 @@ class runGui(object):
         # set_mode('')
         s = state.State()
         # the current state is none... which I suppose is ok. 
-        print (s.mode)
+        #print (s.mode)
 
         @self.app.server.route('/static/<path:path>')
         def static_file(path):
@@ -146,6 +149,7 @@ class runGui(object):
                         layout = html.Div([self.imaginglayout])
                     else:
                         layout = html.Div([self.fwlayout])
+
             return layout
 
  
@@ -168,6 +172,7 @@ class runGui(object):
 
             return navbar_links
 
+        # Switch to False    
         self.app.run_server(debug=True)
 
     def on_connection_state_changed(self, connected):
