@@ -23,7 +23,7 @@ You should now see the server running through the console at a server location a
 The dashboard should now be open and running and look like this: 
 ![alt text](images/software.png "EIT Dashboard")
 
-<img src="images/software.png" height="200">
+
 
 ## Functionality 
 
@@ -43,11 +43,12 @@ Simdata creates data in the same format as the hardware device, incase you want 
 
 You can also use the main software to do either time series or bioimpedance spectroscopy. Instructions for these can be found in the readthedocs tutorials. 
 
-![alt text](images/LungscomparedtoCTScan.png "Spectra EIT device reconstructing lung cross-section")
+
+<img src="images/LungscomparedtoCTScan.png" height="500">
 
 ## Algorithms 
 
-There are three classic EIT algorithms implemented - Back Projection, Graz Consensus and Gauss Newton Methods using the pyEIT toolbox. Each can be adjusted, optimized and improved upon. It's also possible to create 3D meshes with this software in a similar manner to EIDORS(a matlab based EIT software suite). [a link](https://github.com/liubenyuan/pyEIT)
+There are three classic EIT algorithms implemented - Back Projection, Graz Consensus and Gauss Newton Methods using the pyEIT toolbox - [pyEIT](https://github.com/liubenyuan/pyEIT). Each can be adjusted based on the materials you are detecting, to get better results. It's also possible to create 3D meshes with this software in a similar manner to EIDORS(a matlab based EIT software suite). 
 
 
 
