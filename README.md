@@ -26,9 +26,9 @@ The dashboard should now be open and running and look like this:
 
 
 ## Functionality 
-
-![alt text](images/eit32.jpeg#center "EIT device reconstructing location of two cups")
-
+<p align="center">
+![alt text](images/eit32.jpeg "EIT device reconstructing location of two cups")
+</p>
 
 The dashboard can connect to the SPECTRA device via Bluetooth or Serial connection, do tomographic reconstructions in real-time, or by reading in offline data. You can also record data for later analysis. 
 
