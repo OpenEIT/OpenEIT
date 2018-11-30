@@ -1,8 +1,0 @@
-[hardware-config]
-n_el=8		  				
-[software-config]
-algorithm=radon
-mode=singlefrequencygui
-fwsequence=e_conf_8.txt  
-
-
