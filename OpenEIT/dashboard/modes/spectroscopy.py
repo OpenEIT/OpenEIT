@@ -54,10 +54,10 @@ class BISgui(object):
         self.data_dict = dict(zip(self.freqs, self.psd))
         self.layout = []
 
-
     # Get's new data off the serial port. 
     def process_data(self):
         while not self.controller.data_queue.empty():
+            # stuff = self.controller.data_queue.get()
             f,amp = self.controller.data_queue.get()
             self.data_dict[f] = amp
 
@@ -92,7 +92,8 @@ class BISgui(object):
             Output('live-update-spectrogram', 'figure'),
             events=[Event('interval-component', 'interval')])
         def update_graph_scatter():
-            if self.mode == 'b':
+            self.mode = self.controller.serial_getmode()
+            if 'b'in self.mode:
                 # update the data queue. 
                 self.process_data()
 

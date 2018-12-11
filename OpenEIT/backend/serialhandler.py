@@ -19,101 +19,126 @@ RX_CHAR_UUID      = uuid.UUID('6E400003-B5A3-F393-E0A9-E50E24DCCA9E')
 
 logger = logging.getLogger(__name__)
 
-def parse_bis_line(line):  # this parses a bioimpedance spectroscopy line.
-    # 200,500,800,1000,2000,5000,8000,10000,15000,20000,30000,40000,50000,60000,70000  
-    try:  # take only data after magnitudes. 
-        _, data = line.split(":", 1)
-    except ValueError:
-        return None
-    items = []
-    for item in data.split(";"):
-        item = item.strip()
-        if not item:
-            continue
-        try:
-            items.append(float(item))
-        except ValueError:
-            return None
-    return items
+# def parse_bis_line(line):  # this parses a bioimpedance spectroscopy line.
+#     # 200,500,800,1000,2000,5000,8000,10000,15000,20000,30000,40000,50000,60000,70000  
+#     try:  # take only data after magnitudes. 
+#         _, data = line.split(":", 1)
+#     except ValueError:
+#         return None
+#     items = []
+#     for item in data.split(";"):
+#         item = item.strip()
+#         if not item:
+#             continue
+#         try:
+#             items.append(float(item))
+#         except ValueError:
+#             return None
+#     return items
 
-def parse_timeseries(line):  # this parses time series data.  
-    items = []
-    for item in line.split(","):
-        item = item.strip()
-        if not item:
-            continue
-        try:
-            items.append(float(item))
-        except ValueError:
-            return None
+# def parse_timeseries(line):  # this parses time series data.  
+#     items = []
+#     for item in line.split(","):
+#         item = item.strip()
+#         if not item:
+#             continue
+#         try:
+#             items.append(float(item))
+#         except ValueError:
+#             return None
 
-    return items
+#     return items
 
-def parse_line(line):  # this parses a whole line, i.e. 928 values at once. 
-    try:  # take only data after magnitudes. 
-        _, data = line.split(":", 1)
-    except ValueError:
-        return None
+# def parse_line(line):  # this parses a whole line, i.e. 928 values at once. 
+#     try:  # take only data after magnitudes. 
+#         _, data = line.split(":", 1)
+#     except ValueError:
+#         return None
 
-    items = []
-    for item in data.split(","):
-        item = item.strip()
-        if not item:
-            continue
-        try:
-            items.append(float(item))
-        except ValueError:
-            return None
-    return items
+#     items = []
+#     for item in data.split(","):
+#         item = item.strip()
+#         if not item:
+#             continue
+#         try:
+#             items.append(float(item))
+#         except ValueError:
+#             return None
+#     return items
 
-def parse_ble_line(line):   
-    try:  # take only data after magnitudes. 
-        _, data = line.split(":", 1)
-    except ValueError:
-        return None
+# def parse_ble_line(line):   
+#     try:  # take only data after magnitudes. 
+#         _, data = line.split(":", 1)
+#     except ValueError:
+#         return None    
 
-    items = []
-    for item in data.split(","):
-        item = item.strip()
-        if not item:
-            continue
-        try:
-            items.append(float(item))
-        except ValueError:
-            return None
+#     items = []
+#     for item in data.split(","):
+#         item = item.strip()
+#         if not item:
+#             continue
+#         try:
+#             items.append(float(item))
+#         except ValueError:
+#             return None
 
-    # force length. 
-    if len(items) <928:
-        # print (len(items))
-        return None
+#     # force length. 
+#     if len(items) <928:
+#         # print (len(items))
+#         return None
 
-    return items
+#     return items
 
 # This will become the universal line parser which separates out the different types of data. 
 # 
 # 
-def parse_any_line(line):  
-    try:  
-        _, data = line.split(":", 1)
-    except ValueError:
-        return None
+def parse_any_line(line, mode):  
 
     items = []
-    for item in data.split(","):
-        item = item.strip()
-        if not item:
-            continue
-        try:
-            items.append(float(item))
+    if 'a' in mode:
+        for item in line.split(","):
+            item = item.strip()
+            if not item:
+                continue
+            try:
+                items.append(float(item))
+            except ValueError:
+                return None
+    elif 'b' in mode:
+        try:  
+            _, data = line.split(":", 1)
         except ValueError:
             return None
+
+        for item in data.split(";"):
+            item = item.strip()
+            if not item:
+                continue
+            try:
+                items.append(float(item))
+            except ValueError:
+                return None
+    else:
+        try:  
+            _, data = line.split(":", 1)
+        except ValueError:
+            return None
+
+        for item in data.split(","):
+            item = item.strip()
+            if not item:
+                continue
+            try:
+                items.append(float(item))
+            except ValueError:
+                return None
 
     return items
 
 
 class SerialHandler:
 
-    def __init__(self, queue,mode):
+    def __init__(self, queue):
         self._connection_lock = threading.Lock()
         self._reader_thread = None
         self._queue = queue
@@ -122,9 +147,9 @@ class SerialHandler:
         self._recording = False
         self._record_file = None
         # self._data_type = data_type
-        self._mode = mode
+        self._mode = 'd' #mode
 
-        self.raw_text = 'abc'
+        self.raw_text = 'streamed data'
         # Get the BLE provider for the current  platform.
         self.ble = Adafruit_BluefruitLE.get_provider()
         # add these into the main scope of Serial handler instead of the BLE Class handler. 
@@ -210,7 +235,7 @@ class SerialHandler:
                 def handle_line(self, line):
                     # XXX: we should not record the raw stream but the
                     # parsed data
-                    print (line)
+                    # print (line)
                     serialhandler.raw_text = line
 
                     with serialhandler._recording_lock:
@@ -254,6 +279,7 @@ class SerialHandler:
                     self.get_line_lock = 0 
                     self.device = ''
                     self.stoprequest = threading.Event()
+                    #serialhandler = self
 
                 def run(self):
 
@@ -304,19 +330,18 @@ class SerialHandler:
                             # Once service discovery is complete create an instance of the service
                             # and start interacting with it.
                             self.uart = UART(self.device)
-
                             serialhandler._connected = True
                             logger.info('connection made now')
                             charline = ''
-
                             def handle_line(data):
+                                #print ('handling the line')
+                                # print (data)
                                 serialhandler.raw_text = data
                                 with serialhandler._recording_lock:
                                     if serialhandler._recording:
                                         logger.info("serialhandler._recording")
                                         serialhandler._record_file.write(data + "\n")
-
-                                res = parse_any_line(data)
+                                res = parse_any_line(data,serialhandler._mode)
 
                                 if res is not None:
                                     self._queue.put(res)
@@ -324,14 +349,12 @@ class SerialHandler:
                             while self.device.is_connected: 
                                 if self.uart is not None: 
                                     newdata=self.uart.read(timeout_sec=1)
-                                    if newdata is not None:
+                                    if newdata is None:
+                                        print('Received None: {0}'.format(newdata))
+                                    else: 
                                         characters = newdata.decode()
-                                        if "\n" in characters:
+                                        if "\r" in characters: 
                                             charline = charline+characters
-
-                                            #print ('charline')
-                                            #print (charline)
-
                                             handle_line(charline)
                                             charline = ''
                                         else: 
@@ -363,6 +386,8 @@ class SerialHandler:
 
                 def write(self,text):
                     if self.uart is not None: 
+                        with self._queue.mutex:
+                            self._queue.queue.clear()
                         self.uart.write(text)
                     else: 
                         print ('there is no uart connected')

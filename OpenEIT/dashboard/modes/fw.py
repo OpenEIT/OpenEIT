@@ -25,7 +25,7 @@ _LOGGER.addHandler(logging.StreamHandler())
 # Suppress unnecessary debug / warning messages from Flask
 os.environ['FLASK_ENV'] = 'development'
 flask_logger = logging.getLogger('werkzeug')
-flask_logger.setLevel(logging.INFO)
+flask_logger.setLevel(logging.ERROR)
 
 layout = html.Div([html.H5('Hello, world!')])
 
@@ -71,7 +71,7 @@ class FWgui(object):
                         id='name-dropdownfw',
                         options=[{'label':name, 'value':name} for name in self.portnames],
                         placeholder = 'Select Port',
-                        value = self.portnames[0],
+                        value = self.controller.getportname(),
 
                         ),
                     ], className='btn-group',style={'width': '40%', 'display': 'inline-block','text-align': 'center'} ),
@@ -91,7 +91,7 @@ class FWgui(object):
                         id='send_data',
                         placeholder='Enter',
                         type='text',
-                        value='c'
+                        value='d'
                     ),
                     ], style={'width': '20%', 'display': 'inline-block','text-align': 'center'} ),
 
@@ -145,7 +145,7 @@ class FWgui(object):
         def senddata(n_clicks,value):
             if n_clicks is not None:
                 if self.connected: 
-                    data_to_send = str(value)
+                    data_to_send = str(value) + '\n'
                     self.controller.serial_write(data_to_send)
                     print (data_to_send)
                     return data_to_send
@@ -157,12 +157,18 @@ class FWgui(object):
             events=[Event('interval-component', 'interval')])   
         def mode():
             m = self.controller.serial_getmode()
-            if m == 'a':
+            if 'a' in m:
                 return 'time series mode'
-            elif m == 'b':
+            elif 'b' in m:
                 return 'bioimpedance spectroscopy mode'
+            elif 'c' in m:
+                return '8 electrode imaging mode'
+            elif 'd' in m:
+                return '16 electrode imaging mode'   
+            elif 'e' in m:
+                return '32 electrode imaging mode'                                                 
             else: 
-                return 'imaging mode'         
+                return 'another mode'         
 
         @self.app.callback(
             Output(component_id='connectbuttonfw', component_property='children'),
@@ -175,6 +181,7 @@ class FWgui(object):
                     if self.connected == False:
                         print('connect')
                         self.controller.connect(str(dropdown_value))
+                        self.controller.setportname(str(dropdown_value))
                         return 'Disconnect' 
                     else:
                         print('disconnect')

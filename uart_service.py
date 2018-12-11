@@ -61,7 +61,7 @@ def main():
         # uart.write('a'.encode())
         # print("Sent 'Hello world!' to the device.")
         counter = 0 
-        doodad  = 0 
+        doodad = 0 
         while device.is_connected: 
             if uart is not None: 
                 # uart.write(b'a')
@@ -76,9 +76,10 @@ def main():
                     print('Received: {0}'.format(newdata))
                     counter = counter + 1 
                     if (counter > 5 and doodad == 0): 
-                       uart.write('a\r'.encode())
+                       uart.write('a\n'.encode())
                        counter = 0 # reset the counter. 
                        doodad =1 
+                       # it's still having an issue with bioimpedance spectosopc
                     # break
 
         # Now wait up to one minute to receive data from the device.

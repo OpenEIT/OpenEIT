@@ -147,19 +147,18 @@ class Controller:
     def __init__(self):
         self._signal_connections = {}
         self.recording = False
-
         # setup the queues for the workers
         self._data_queue  = queue.Queue()
         self._image_queue = queue.Queue()
-        self._mode='c'
+        self._algorithm   = 'jac'
         self.playback = None
 
         # instantiate the serial handler. It should be instantiated knowing what sort of data it is expecting. 
-        self.serial_handler = OpenEIT.backend.SerialHandler(self._data_queue,self._mode)
+        self.serial_handler = OpenEIT.backend.SerialHandler(self._data_queue)
 
 
     def configure(self, *, initial_port=None, virtual_tty=False,
-                 read_file=False,n_el=8,algorithm='bp',mode='singlefrequency'):
+                 read_file=False):
 
         if initial_port is not None:
             if virtual_tty:
@@ -175,26 +174,18 @@ class Controller:
                 self.menuselect.set(initial_port)
                 self.connect()
 
-        self._n_el=int(n_el)
-        self._algorithm=algorithm
-        self._mode=mode   
-
         # set the mode for everything. 
-        self.serial_setmode(mode)
+        # self.serial_setmode(mode)
         self.serial_port_name = '' 
 
-        self.image_reconstruct = OpenEIT.reconstruction.ReconstructionWorker(
-            self._data_queue,
-            self._image_queue,
-            self._algorithm,
-            self._n_el
-        )
+        self.image_reconstruct = OpenEIT.reconstruction.ReconstructionWorker()
 
-        if self._algorithm == 'jac' or self._algorithm == 'bp': 
-            self.x,self.y,self.tri,self.el_pos = self.image_reconstruct.get_plot_params()
-        if self._algorithm == 'greit':
-            self.gx,self.gy,self.ds = self.image_reconstruct.get_greit_params() 
-
+        self._mode = self.serial_handler.getmode()
+        if 'a' in self._mode or 'b' in self._mode:
+            self._n_el = 16 # just to set it to something. 
+        elif 'd' in self._mode:
+            self._n_el = 16
+            self.update_algorithm(self._algorithm ,16)
 
         self.image_reconstruct.start()
 
@@ -214,6 +205,29 @@ class Controller:
     @property
     def algorithm(self):
         return self._algorithm
+###
+    def update_algorithm(self,algo,n_el):
+        self.image_reconstruct.stop_reconstructing() 
+
+        self._algorithm = algo 
+        self._n_el      = n_el
+        self._data_queue.queue.clear()
+        self._image_queue.queue.clear()    
+
+        self.image_reconstruct.reset(
+            self._data_queue,
+            self._image_queue,
+            self._algorithm,
+            self._n_el
+        )
+        self.image_reconstruct.baseline()        
+        self.image_reconstruct.start_reconstructing()
+
+
+        if self._algorithm == 'jac' or self._algorithm == 'bp': 
+            self.x,self.y,self.tri,self.el_pos = self.image_reconstruct.get_plot_params()
+        if self._algorithm == 'greit':
+            self.gx,self.gy,self.ds = self.image_reconstruct.get_greit_params() 
 
     def plot_params(self):
         return self.x,self.y,self.tri,self.el_pos
@@ -244,11 +258,35 @@ class Controller:
     def getportname(self):
         return self.serial_port_name
         
+    def setportname(self,portname):
+        self.serial_port_name = portname
+          
     def return_line(self):
         return self.serial_handler.return_last_line()
 
     def serial_write(self, text):
         self.serial_handler.write(text)
+        # send this through the serial port. 
+        self.serial_setmode(text)
+        self._mode = text # just the first text not the \n
+        if 'a' in self._mode or 'b' in self._mode:
+            print ('time series or BIS \n')
+            self.image_reconstruct.stop_reconstructing() 
+            # clear the queue as well. 
+            self._data_queue.queue.clear()
+            self._image_queue.queue.clear()
+            print (self._mode)
+        else: 
+            if 'c' in self._mode:
+                self._n_el = 8 
+            elif 'd' in self._mode:
+                self._n_el = 16
+            elif 'e' in self._mode:
+                self._n_el = 32
+    
+            self.update_algorithm(self._algorithm,self._n_el)
+            # restart the thread. 
+            # self.image_reconstruct.start()
 
     def serial_setmode(self, text):
         self.serial_handler.setmode(text)

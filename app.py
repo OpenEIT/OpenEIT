@@ -30,9 +30,9 @@ def main():
     # configFilePath = r'configuration.txt'
     # configParser.read(configFilePath)
 
-    n_el        = 16 #configParser.get('hardware-config', 'n_el')
-    algorithm   = 'jac' #configParser.get('software-config', 'algorithm')
-    mode        = 'c' #configParser.get('software-config', 'mode')
+    #n_el        = 16 #configParser.get('hardware-config', 'n_el')
+    #algorithm   = 'greit' #configParser.get('software-config', 'algorithm')
+    #mode        = 'c' #configParser.get('software-config', 'mode')
 
     ap = argparse.ArgumentParser()
 
@@ -52,9 +52,9 @@ def main():
         initial_port=args.port,
         read_file=args.read_file,
         virtual_tty=args.virtual_tty,
-        n_el= n_el,
-        algorithm=algorithm,
-        mode=mode
+        #n_el= n_el,
+        #algorithm=algorithm,
+        #mode=mode
     )
 
     gui = runGui(controller)

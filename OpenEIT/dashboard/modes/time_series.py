@@ -222,7 +222,8 @@ class Timeseriesgui(object):
         @self.app.callback(Output('live-update-time-series', 'figure'),
                       events=[Event('interval-component', 'interval')])
         def update_graph_scatter():
-            if self.mode == 'a':
+            self.mode = self.controller.serial_getmode()
+            if 'a' in self.mode:
                 # update from the data queue. 
                 self.process_data()
 

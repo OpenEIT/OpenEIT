@@ -70,12 +70,9 @@ class Tomogui(object):
 
         self.run_file = False 
 
-        if self.algorithm  == 'greit':
-            self.gx,self.gy,self.ds = self.controller.greit_params()
-            self.img = self.ds # numpy.zeros((32,32),dtype=float)
-        else: 
-            self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
-            self.img = numpy.zeros(self.x.shape[0]) 
+        # self.n_electrodes = ['8','16','32']
+        self.algorithms   = ['jac','bp','greit']
+        self.img = None
 
     # Get's new data off the serial port. 
     def process_data(self):
@@ -111,8 +108,28 @@ class Tomogui(object):
 
                 html.Div( [  
 
+
                     # The histogram and controls part: 
                     html.Div( [
+
+                        html.Div( [
+                            html.Div( [
+                            html.P('Algorithm Settings: '),    
+                            ], style={'width': '50%', 'display': 'inline-block','text-align': 'center'} ),
+
+                            html.Div( [
+                            html.Ul(id="algorithm_setting"),
+                            ], style={'width': '20%', 'display': 'inline-block','text-align': 'center'} ),
+
+                            dcc.Dropdown(
+                                id='algorithm-dropdown',
+                                options=[{'label':name, 'value':name} for name in self.algorithms],
+                                placeholder = 'Select Algorithm',
+                                value = self.algorithms[0],
+                                ),
+
+                        ], style={'width': '70%', 'display': 'inline-block'} ),
+
                         html.Div( [
                             html.P('Offline File Control: '),
                             # the offline controls 
@@ -270,6 +287,31 @@ class Tomogui(object):
             else: 
                 return 'not step back'
 
+###
+        @self.app.callback(
+            dash.dependencies.Output('algorithm_setting', 'children'),
+            [dash.dependencies.Input('algorithm-dropdown', 'value')],
+            )
+        def update_output(selected_algorithm):
+
+            # this is getting called whenever we load it, which is a mistake. 
+            # 
+            print(selected_algorithm)
+
+            self.algorithm = selected_algorithm
+            self.n_el = self.controller.n_el
+            self.controller.update_algorithm(self.algorithm,self.n_el)
+
+            # if the algorithm setting is change, we need to re-initialize the whole thing. 
+            if self.algorithm  == 'greit':
+                self.gx,self.gy,self.ds = self.controller.greit_params()
+                self.img = self.ds # numpy.zeros((32,32),dtype=float)
+            else: 
+                self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
+                self.img = numpy.zeros(self.x.shape[0]) 
+
+            return selected_algorithm
+
         @self.app.callback(
                     Output("arunfile", "children"),
                     [Input("runfile", "n_clicks")], )
@@ -375,15 +417,13 @@ class Tomogui(object):
                else: 
                     self.run_file = False
 
-            if self.mode == 'c': # and self.run_file is False:
-                # print ('processed the data')
-                # if there is data on the queue, do an update. 
+            self.mode = self.controller.serial_getmode()
+            if 'c' in self.mode or 'd' in self.mode or 'e' in self.mode: # and self.run_file is False:
                 self.process_data()
 
             if self.algorithm  == 'greit':
                 self.gx,self.gy,self.ds = self.controller.greit_params()
-                print (self.img)
-                #self.img = self.ds # numpy.zeros((32,32),dtype=float)
+
                 # If algorithm is GREIT 
                 layout = go.Layout(
                     width = 500,
@@ -428,9 +468,6 @@ class Tomogui(object):
                     )
                 ]
             else: 
-                self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
-                #self.img = numpy.zeros(self.x.shape[0])
-                # print (self.img)
 
                 camera = dict(
                     up=dict(x=0, y=0, z=1),
@@ -460,9 +497,14 @@ class Tomogui(object):
                                 z=0.0),
                             camera =camera,
                             )
-
                         )
-                self.img[1] = 2.0
+
+                if self.img is None:
+                    self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
+                    self.img = numpy.zeros(self.x.shape[0]) 
+                    self.img[1] = 2.0
+
+
                 data = FF.create_trisurf(x=self.x, y=self.y, z=self.img,
                                          simplices=self.tri,
                                          color_func=self.dist_origin, # this is equivalent to the mask in tripcolor. 
@@ -476,6 +518,7 @@ class Tomogui(object):
                                          scale=None,
                                          ) 
 
+
             return {'data': data, 'layout': layout}
 
         @self.app.callback(
@@ -483,10 +526,24 @@ class Tomogui(object):
             events=[Event('interval-component', 'interval')])
         def update_graph_scatter():
 
-            # print (self.img)
+            if self.algorithm == 'greit':
+                # print ('algorithm is greit')
+                self.gx,self.gy,self.ds = self.controller.greit_params()
+                self.img = self.ds 
+                if self.img is None:
+                    self.img = numpy.zeros((32,32),dtype=float)
+                    nanless = self.img[~numpy.isnan(self.img)]
+                    flatimg = (nanless).flatten()
 
-            nanless = self.img[~numpy.isnan(self.img)]
-            flatimg = (nanless).flatten()
+            else: 
+                self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
+                if self.img is not None:
+                    flatness = numpy.array(self.img).ravel()
+                    nanless = flatness[~numpy.isnan(flatness)]
+                    flatimg = (nanless).flatten()
+                else: 
+                    print ('nothing to histogram yet')
+                    flatimg = [0,1,0]
 
             data = [go.Histogram(x=flatimg)]
 
@@ -503,17 +560,19 @@ class Tomogui(object):
                     title='Frequency',
                     autorange=True
                 )
-
             )
 
             return {'data': data, 'layout': layout}
 
-        def autoscale(): # This sets baseline to what was originally stored in the background.txt file. 
+        def autoscale(): 
             print ('we are in the autoscale function')
             nanless = self.img[~numpy.isnan(self.img)]
             self.vmax= float(int(numpy.max(nanless)*100))/100.0
             self.vmin =float(int(numpy.min(nanless)*100))/100.0
 
+            if self.vmax <= self.vmin: # safety value. 
+                self.vmin = 0
+                self.vmax = 1000 
 
             self.rsvaluemin = self.vmin
             self.rsvaluemax = self.vmax
