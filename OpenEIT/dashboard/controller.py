@@ -151,6 +151,7 @@ class Controller:
         self._data_queue  = queue.Queue()
         self._image_queue = queue.Queue()
         self._algorithm   = 'jac'
+        self._n_el        = 16
         self.playback = None
 
         # instantiate the serial handler. It should be instantiated knowing what sort of data it is expecting. 
@@ -264,7 +265,9 @@ class Controller:
     def return_line(self):
         return self.serial_handler.return_last_line()
 
-    def serial_write(self, text):
+    def serial_write(self, text, algorithm = 'jac'):
+        self._algorithm = algorithm
+
         self.serial_handler.write(text)
         # send this through the serial port. 
         self.serial_setmode(text)
@@ -285,8 +288,7 @@ class Controller:
                 self._n_el = 32
     
             self.update_algorithm(self._algorithm,self._n_el)
-            # restart the thread. 
-            # self.image_reconstruct.start()
+
 
     def serial_setmode(self, text):
         self.serial_handler.setmode(text)

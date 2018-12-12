@@ -14,7 +14,6 @@ import serial.tools.list_ports
 import OpenEIT.dashboard
 import queue
 import numpy
-
 import base64
 #import io
 
@@ -70,7 +69,7 @@ class Tomogui(object):
 
         self.run_file = False 
 
-        # self.n_electrodes = ['8','16','32']
+        self.n_electrodes = ['8','16','32']
         self.algorithms   = ['jac','bp','greit']
         self.img = None
 
@@ -105,9 +104,7 @@ class Tomogui(object):
                     href='/static/bootstrap.min.css'
                 ),
 
-
                 html.Div( [  
-
 
                     # The histogram and controls part: 
                     html.Div( [
@@ -121,12 +118,32 @@ class Tomogui(object):
                             html.Ul(id="algorithm_setting"),
                             ], style={'width': '20%', 'display': 'inline-block','text-align': 'center'} ),
 
+                        ], style={'width': '70%', 'display': 'inline-block'} ),
+
+                        html.Div( [
+                            html.Div( [
+
                             dcc.Dropdown(
                                 id='algorithm-dropdown',
                                 options=[{'label':name, 'value':name} for name in self.algorithms],
                                 placeholder = 'Select Algorithm',
-                                value = self.algorithms[0],
+                                value = self.controller._algorithm,
                                 ),
+                            ], className='btn-group',style={'width': '40%', 'display': 'inline-block','text-align': 'center'} ),
+
+
+                            html.Div( [
+                            dcc.Dropdown(
+                                id='electrode-dropdown',
+                                options=[{'label':name, 'value':name} for name in self.n_electrodes],
+                                placeholder = 'Select Algorithm',
+                                value = str(self.controller._n_el),
+                                ),
+                            ], className='btn-group',style={'width': '30%', 'display': 'inline-block','text-align': 'center'} ),
+
+                            html.Div( [
+                            html.Button(children='Set', id='setmode', type='submit',className ='btn btn-outline-dark'),
+                            ], className='btn-group',style={'width': '20%', 'display': 'inline-block','text-align': 'center'} ),
 
                         ], style={'width': '70%', 'display': 'inline-block'} ),
 
@@ -160,7 +177,6 @@ class Tomogui(object):
                             html.Div( [
                             html.Div(id='output-container-range-slider')
                             ], className='btn-group', style={'width': '100%', 'display': 'inline-block','text-align': 'center'} ),
-
 
                         ], className='btn-group',  style={'width': '100%', 'display': 'inline-block'} ),
 
@@ -206,6 +222,7 @@ class Tomogui(object):
                          
                         ], style={'width': '100%', 'display': 'inline-block'} ),
                         
+
                         html.Div( [
                         dcc.Graph(
                             id='live-update-histogram',
@@ -290,27 +307,64 @@ class Tomogui(object):
 ###
         @self.app.callback(
             dash.dependencies.Output('algorithm_setting', 'children'),
-            [dash.dependencies.Input('algorithm-dropdown', 'value')],
-            )
-        def update_output(selected_algorithm):
+            [dash.dependencies.Input('algorithm-dropdown', 'value'),
+            dash.dependencies.Input('electrode-dropdown', 'value'),
+            dash.dependencies.Input('setmode', 'n_clicks')
+            ], )
+        def update_output(selected_algorithm,selected_electrodes,n_clicks):
+            if n_clicks is not None:
+                # this is getting called whenever we load it, which is a mistake. 
+                print(selected_algorithm)
+                print(selected_electrodes)
 
-            # this is getting called whenever we load it, which is a mistake. 
-            # 
-            print(selected_algorithm)
+                # change the setting in firmware. 
+                if self.connected: 
+                    if int(selected_electrodes) == 8: 
+                        value = 'c'
+                    elif int(selected_electrodes) == 16: 
+                        value = 'd'
+                    else: # 32 electrodes
+                        value = 'e'
+                    data_to_send = str(value) + '\n'
+                    self.controller.serial_write(data_to_send,selected_algorithm)
 
-            self.algorithm = selected_algorithm
-            self.n_el = self.controller.n_el
-            self.controller.update_algorithm(self.algorithm,self.n_el)
+            #     data_to_send = str(value) + '\n'
+            #     self.serial_handler.write(text)
+            #     # send this through the serial port. 
+            #     self.serial_setmode(text)
+            #     self._mode = text # just the first text not the \n
+            #     if 'a' in self._mode or 'b' in self._mode:
+            #         print ('time series or BIS \n')
+            #         self.image_reconstruct.stop_reconstructing() 
+            #         # clear the queue as well. 
+            #         self._data_queue.queue.clear()
+            #         self._image_queue.queue.clear()
+            #         print (self._mode)
+            #     else: 
+            #         if 'c' in self._mode:
+            #             self._n_el = 8 
+            #         elif 'd' in self._mode:
+            #             self._n_el = 16
+            #         elif 'e' in self._mode:
+            #             self._n_el = 32
+    
+            # self.update_algorithm(self._algorithm,self._n_el)
 
-            # if the algorithm setting is change, we need to re-initialize the whole thing. 
-            if self.algorithm  == 'greit':
-                self.gx,self.gy,self.ds = self.controller.greit_params()
-                self.img = self.ds # numpy.zeros((32,32),dtype=float)
-            else: 
-                self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
-                self.img = numpy.zeros(self.x.shape[0]) 
 
-            return selected_algorithm
+                self.algorithm  = selected_algorithm
+                self.n_el       = int(selected_electrodes)
+
+                # self.controller.update_algorithm(self.algorithm,self.n_el)
+
+                # if the algorithm setting is change, we need to re-initialize the whole thing. 
+                if self.algorithm  == 'greit':
+                    self.gx,self.gy,self.ds = self.controller.greit_params()
+                    self.img = self.ds # numpy.zeros((32,32),dtype=float)
+                else: 
+                    self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
+                    self.img = numpy.zeros(self.x.shape[0]) 
+
+                return selected_algorithm+selected_electrodes
 
         @self.app.callback(
                     Output("arunfile", "children"),
@@ -359,19 +413,19 @@ class Tomogui(object):
                 autoscale()  
                 return  self.vmin
 
-        @self.app.callback(
-                    Output("range-slider", "value"),
-                    [Input("maximum_range", "value")], )
-        def change_maxrange(value):
-            self.rsvaluemax = value
-            return value
+        # @self.app.callback(
+        #             Output("range-slider", "value"),
+        #             [Input("maximum_range", "value")], )
+        # def change_maxrange(value):
+        #     self.rsvaluemax = value
+        #     return value
 
-        @self.app.callback(
-                    Output("ab", "children"),
-                    [Input("minimum_range", "value")], )
-        def change_minrange(value):
-            self.rsvaluemin = value
-            return 'ab'
+        # @self.app.callback(
+        #             Output("ab", "children"),
+        #             [Input("minimum_range", "value")], )
+        # def change_minrange(value):
+        #     self.rsvaluemin = value
+        #     return 'ab'
 
         @self.app.callback(
             Output('output-container-range-slider', 'children'),
@@ -387,7 +441,10 @@ class Tomogui(object):
             [Input('minimum_range', 'value'),
              Input('maximum_range', 'value')])
         def display_controls(datasource_1_value, datasource_2_value):
+
                 print (datasource_1_value, datasource_2_value) 
+
+
                 DYNAMIC_CONTROLS = {}
                 therange = int(datasource_2_value) - int(datasource_1_value)
                 step     = int(therange)//10

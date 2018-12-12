@@ -123,7 +123,7 @@ class FWgui(object):
                     rows = 10,
                     style={'width': '60%'}
                 ),
-
+                html.P('A:Time Series, B: Bioimpedance Spectroscopy, C: 8 electrode EIT, D: 16 electrode EIT, E: 32 electrode EIT'),
                 dcc.Interval(
                     id='interval-component',
                     interval=PLOT_REFRESH_INTERVAL
