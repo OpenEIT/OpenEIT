@@ -85,22 +85,23 @@ class ReconstructionWorker(threading.Thread):
     def run(self):
         # TODO: add time tracking here!
         while self._running:
-            data = np.array(self._input_queue.get())
-            # preprocess the data to exclude zero values? 
-            data = [1.0 if x == 0 else x for x in data]
+            if self._input_queue is not None:             
+                data = np.array(self._input_queue.get())
+                # preprocess the data to exclude zero values? 
+                data = [1.0 if x == 0 else x for x in data]
 
-            print (len(data))
+                print (len(data))
 
-            if self._baseline == 1: 
-                self._reconstruction.update_reference(data)
-                self._baseline = 0
+                if self._baseline == 1: 
+                    self._reconstruction.update_reference(data)
+                    self._baseline = 0
 
-            try:
-                before = time.time()
-                img = self._reconstruction.eit_reconstruction(data)
-                logger.info("reconstruction time: %.2f", time.time() - before)
-            except RuntimeError as err:
-                logger.info('reconstruction error: %s', err)
-            else:
-                self._output_queue.put(img)
+                try:
+                    before = time.time()
+                    img = self._reconstruction.eit_reconstruction(data)
+                    logger.info("reconstruction time: %.2f", time.time() - before)
+                except RuntimeError as err:
+                    logger.info('reconstruction error: %s', err)
+                else:
+                    self._output_queue.put(img)
 

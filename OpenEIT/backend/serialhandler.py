@@ -19,79 +19,7 @@ RX_CHAR_UUID      = uuid.UUID('6E400003-B5A3-F393-E0A9-E50E24DCCA9E')
 
 logger = logging.getLogger(__name__)
 
-# def parse_bis_line(line):  # this parses a bioimpedance spectroscopy line.
-#     # 200,500,800,1000,2000,5000,8000,10000,15000,20000,30000,40000,50000,60000,70000  
-#     try:  # take only data after magnitudes. 
-#         _, data = line.split(":", 1)
-#     except ValueError:
-#         return None
-#     items = []
-#     for item in data.split(";"):
-#         item = item.strip()
-#         if not item:
-#             continue
-#         try:
-#             items.append(float(item))
-#         except ValueError:
-#             return None
-#     return items
 
-# def parse_timeseries(line):  # this parses time series data.  
-#     items = []
-#     for item in line.split(","):
-#         item = item.strip()
-#         if not item:
-#             continue
-#         try:
-#             items.append(float(item))
-#         except ValueError:
-#             return None
-
-#     return items
-
-# def parse_line(line):  # this parses a whole line, i.e. 928 values at once. 
-#     try:  # take only data after magnitudes. 
-#         _, data = line.split(":", 1)
-#     except ValueError:
-#         return None
-
-#     items = []
-#     for item in data.split(","):
-#         item = item.strip()
-#         if not item:
-#             continue
-#         try:
-#             items.append(float(item))
-#         except ValueError:
-#             return None
-#     return items
-
-# def parse_ble_line(line):   
-#     try:  # take only data after magnitudes. 
-#         _, data = line.split(":", 1)
-#     except ValueError:
-#         return None    
-
-#     items = []
-#     for item in data.split(","):
-#         item = item.strip()
-#         if not item:
-#             continue
-#         try:
-#             items.append(float(item))
-#         except ValueError:
-#             return None
-
-#     # force length. 
-#     if len(items) <928:
-#         # print (len(items))
-#         return None
-
-#     return items
-
-# This will become the universal line parser which separates out the different types of data. 
-# 
-# 
 def parse_any_line(line, mode):  
 
     items = []
@@ -146,8 +74,9 @@ class SerialHandler:
         self._recording_lock = threading.Lock()
         self._recording = False
         self._record_file = None
+        self._bytestream = ''
         # self._data_type = data_type
-        self._mode = 'd' #mode
+        self._mode = 'd' # mode
 
         self.raw_text = 'streamed data'
         # Get the BLE provider for the current  platform.
@@ -183,6 +112,9 @@ class SerialHandler:
 
     def getmode(self):
         return self._mode
+
+    def getbytes(self):
+        return self._bytestream
 
     def connect(self, port_selection):
         with self._connection_lock:
@@ -241,7 +173,7 @@ class SerialHandler:
                     with serialhandler._recording_lock:
                         if serialhandler._recording:
                             logger.info("serialhandler._recording")
-                            serialhandler._record_file.write(line + "\n")
+                            #serialhandler._record_file.write(line + "\n")
 
                     res = parse_any_line(line)
                     # parse line based on different input data types. 
@@ -279,7 +211,7 @@ class SerialHandler:
                     self.get_line_lock = 0 
                     self.device = ''
                     self.stoprequest = threading.Event()
-                    #serialhandler = self
+
 
                 def run(self):
 
@@ -339,8 +271,10 @@ class SerialHandler:
                                 serialhandler.raw_text = data
                                 with serialhandler._recording_lock:
                                     if serialhandler._recording:
-                                        logger.info("serialhandler._recording")
-                                        serialhandler._record_file.write(data + "\n")
+                                        # logger.info("serialhandler._recording")
+                                        #serialhandler._record_file.write(data + "\n")
+                                        serialhandler._bytestream = serialhandler._bytestream + data
+
                                 res = parse_any_line(data,serialhandler._mode)
 
                                 if res is not None:
@@ -417,10 +351,11 @@ class SerialHandler:
             print('recording started!!')
             timestr = time.strftime("%Y%m%d-%H%M%S")
             self._recording = True
-            self._record_file = open('data_' + timestr + '.txt', 'a')
+            # self._record_file = open('data_' + timestr + '.txt', 'a')
+            self._bytestream = '' 
 
     def stop_recording(self):
         with self._recording_lock:
             print('recording stopped')
             self._recording = False
-            self._record_file.close()
+            # self._record_file.close()

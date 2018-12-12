@@ -11,6 +11,7 @@ from .modes import time_series
 from .modes import imaging
 from .modes import fw
 import os 
+import urllib
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ class runGui(object):
 
         self.fw_display = fw.FWgui(self.controller,self.app)
         self.fwlayout = self.fw_display.return_layout()  
-
+        
         logger.info("openeit_server_started")
 
 
@@ -89,8 +90,18 @@ class runGui(object):
                         id='recordbutton',
                         #type ='submit',
                         className='btn btn-light'),
+
                 ], className='btn-group'),
 
+                html.Div([
+                    html.Pre('    '),
+                    html.A(children='Download', 
+                        id='download-link',
+                        download="rawdata.txt",
+                        href="",
+                        target="_blank"
+                    ),
+                ], className='btn-group'),
             ], className='navbar navbar-expand-lg navbar-dark bg-dark'), 
 
             dcc.Location(id='url', refresh=False),
@@ -122,7 +133,7 @@ class runGui(object):
                         self.controller.start_recording()
                         return 'Stop Recording'
                     else: 
-                        print ('comms not connected')
+                        #print ('comms not connected')
                         return 'Record'
                 else:
                     print ('stop recording')
@@ -172,6 +183,26 @@ class runGui(object):
 
             return navbar_links
 
+        @self.app.callback(
+            dash.dependencies.Output('download-link', 'href'),
+            [dash.dependencies.Input('recordbutton', 'n_clicks')])
+        def update_download_link(n_clicks):
+            if n_clicks is not None:
+                if self.recording == False:
+                    return 'hi there'
+                    # if self.connected == True: 
+                    #     self.controller.start_recording()
+                    #     return ''
+                    # else: 
+                    #     print ('comms not connected')
+                    #     return ''
+                else:
+                    datastream = self.controller.serial_getbytestream()
+                    # print (datastream)
+                    #csv_string = datastream.to_csv(index=False, encoding='utf-8')
+                    csv_string = "data:text/txt;charset=utf-8," + urllib.parse.quote(datastream)
+                    return csv_string  
+  
         # Switch to False    
         self.app.run_server(debug=True)
 

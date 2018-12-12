@@ -294,6 +294,9 @@ class Controller:
     def serial_getmode(self):
         return self.serial_handler.getmode()
 
+    def serial_getbytestream(self):
+        return self.serial_handler.getbytes()
+
     def disconnect(self):
         if self.playback is not None:
             self.playback.close()
