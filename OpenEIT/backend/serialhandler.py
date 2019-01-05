@@ -173,18 +173,10 @@ class SerialHandler:
                     with serialhandler._recording_lock:
                         if serialhandler._recording:
                             logger.info("serialhandler._recording")
-                            #serialhandler._record_file.write(line + "\n")
-
-                    res = parse_any_line(line)
-                    # parse line based on different input data types. 
-                    # if self._data_type == 'a': 
-                    #     res = parse_timeseries(line)
-                    # elif self._data_type == 'b':
-                    #     res = parse_bis_line(line)
-                    # else: 
-                    #     res = parse_line(line)
-                    # logger.info(res)
-
+                            # serialhandler._record_file.write(line + "\n")
+                            serialhandler._bytestream = serialhandler._bytestream + line
+                    
+                    res = parse_any_line(line,serialhandler._mode)
                     if res is not None:
                         serialhandler._queue.put(res)
 
@@ -249,7 +241,7 @@ class SerialHandler:
 
                         print('Connecting to ', self.device.name)
                         self.device.connect()  # Will time out after 60 seconds, specify timeout_sec parameter
-                                          # to change the timeout.
+                                               # to change the timeout.
 
                         # Once connected do everything else in a try/finally to make sure the device
                         # is disconnected when done.
@@ -258,7 +250,6 @@ class SerialHandler:
                             # time out after 60 seconds (specify timeout_sec parameter to override).
                             print('Discovering services...')
                             UART.discover(self.device)
-
                             # Once service discovery is complete create an instance of the service
                             # and start interacting with it.
                             self.uart = UART(self.device)
@@ -266,13 +257,13 @@ class SerialHandler:
                             logger.info('connection made now')
                             charline = ''
                             def handle_line(data):
-                                #print ('handling the line')
+                                # print ('handling the line')
                                 # print (data)
                                 serialhandler.raw_text = data
                                 with serialhandler._recording_lock:
                                     if serialhandler._recording:
                                         # logger.info("serialhandler._recording")
-                                        #serialhandler._record_file.write(data + "\n")
+                                        # serialhandler._record_file.write(data + "\n")
                                         serialhandler._bytestream = serialhandler._bytestream + data
 
                                 res = parse_any_line(data,serialhandler._mode)
