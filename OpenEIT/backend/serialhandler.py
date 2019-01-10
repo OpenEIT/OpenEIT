@@ -145,8 +145,8 @@ class SerialHandler:
                 try:
                     ser.open()
                     # on connect, write the mode from the config file. 
-                    ser.write(self._mode.encode())
-                    print ('writing mode to device')
+                    #ser.write(self._mode.encode())
+                    #print ('writing mode to device')
 
                 except serial.SerialException:
                     print ('could not connect')

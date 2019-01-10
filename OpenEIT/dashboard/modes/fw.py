@@ -49,6 +49,13 @@ class FWgui(object):
         self.currentport = ''
         full_ports = list(serial.tools.list_ports.comports())
         self.portnames  = [item[0] for item in full_ports]
+
+        sep = ' '
+        rest = str(full_ports[-1]).split(sep, 1)[0]
+
+        self.currentport = rest
+
+        self.controller.setportname(self.currentport)
         self.data = ''
         self.layout = []
 
@@ -59,6 +66,11 @@ class FWgui(object):
             #self.data_dict[f] = amp
 
     def return_layout(self):
+        full_ports = list(serial.tools.list_ports.comports())
+        self.portnames  = [item[0] for item in full_ports]
+        self.currentport = self.controller.getportname()
+        #print (self.currentport)
+
         self.layout = html.Div( [
                 html.Link(
                     rel='stylesheet',
@@ -70,9 +82,9 @@ class FWgui(object):
                     dcc.Dropdown(
                         id='name-dropdownfw',
                         options=[{'label':name, 'value':name} for name in self.portnames],
-                        placeholder = 'Select Port',
-                        value = self.controller.getportname(),
-
+                        #placeholder = 'hello',
+                        value = self.currentport,
+                        clearable=False
                         ),
                     ], className='btn-group',style={'width': '40%', 'display': 'inline-block','text-align': 'center'} ),
 
@@ -147,7 +159,7 @@ class FWgui(object):
                 if self.connected: 
                     data_to_send = str(value) + '\n'
                     self.controller.serial_write(data_to_send)
-                    print (data_to_send)
+                    #print (data_to_send)
                     return data_to_send
 
             return 'connect to send data'
@@ -179,9 +191,8 @@ class FWgui(object):
             if n_clicks is not None:
                 try: 
                     if self.connected == False:
-                        print('connect')
+                        print(str(dropdown_value))                     
                         self.controller.connect(str(dropdown_value))
-                        self.controller.setportname(str(dropdown_value))
                         return 'Disconnect' 
                     else:
                         print('disconnect')
