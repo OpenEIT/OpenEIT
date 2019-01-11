@@ -353,9 +353,6 @@ class Tomogui(object):
 
                 self.algorithm  = selected_algorithm
                 self.n_el       = int(selected_electrodes)
-
-                # self.controller.update_algorithm(self.algorithm,self.n_el)
-
                 # if the algorithm setting is change, we need to re-initialize the whole thing. 
                 if self.algorithm  == 'greit':
                     self.gx,self.gy,self.ds = self.controller.greit_params()
@@ -561,20 +558,40 @@ class Tomogui(object):
                     self.img = numpy.zeros(self.x.shape[0]) 
                     self.img[1] = 2.0
 
+                try:
+                    # currently we do no scaling based on the range to scale. 
+                    # this is pretty limiting when it comes to testing. 
+                    # I need to dynamically change the colormap... 
+                    data = FF.create_trisurf(x=self.x, y=self.y, z=self.img,
+                                             simplices=self.tri,
+                                             color_func=self.dist_origin, # this is equivalent to the mask in tripcolor. 
+                                             colormap='Portland',
+                                             show_colorbar=False,
+                                             title="Mesh Reconstruction",
+                                             aspectratio=dict(x=1.0, y=1.0, z=0.01),
+                                             showbackground=False,
+                                             plot_edges=False,
+                                             height=600, width=600, 
+                                             scale=None,
+                                             ) 
+                except: # this exception is called when changing electrode number without reloading the imaging dash. 
+                    print ('exception occurred as reloaded figure of different size')
+                    self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
+                    self.img = numpy.zeros(self.x.shape[0]) 
+                    self.img[1] = 2.0
 
                 data = FF.create_trisurf(x=self.x, y=self.y, z=self.img,
-                                         simplices=self.tri,
-                                         color_func=self.dist_origin, # this is equivalent to the mask in tripcolor. 
-                                         colormap='Portland',
-                                         show_colorbar=False,
-                                         title="Mesh Reconstruction",
-                                         aspectratio=dict(x=1.0, y=1.0, z=0.01),
-                                         showbackground=False,
-                                         plot_edges=False,
-                                         height=600, width=600, 
-                                         scale=None,
-                                         ) 
-
+                     simplices=self.tri,
+                     color_func=self.dist_origin, # this is equivalent to the mask in tripcolor. 
+                     colormap='Portland',
+                     show_colorbar=False,
+                     title="Mesh Reconstruction",
+                     aspectratio=dict(x=1.0, y=1.0, z=0.01),
+                     showbackground=False,
+                     plot_edges=False,
+                     height=600, width=600, 
+                     scale=None,
+                     ) 
 
             return {'data': data, 'layout': layout}
 
@@ -583,25 +600,29 @@ class Tomogui(object):
             events=[Event('interval-component', 'interval')])
         def update_graph_scatter():
 
+            flatimg = [0,1,0]
+            #data = [go.Histogram(x=flatimg)]
             if self.algorithm == 'greit':
                 # print ('algorithm is greit')
-                self.gx,self.gy,self.ds = self.controller.greit_params()
-                self.img = self.ds 
+                #self.gx,self.gy,self.ds = self.controller.greit_params()
+                #self.img = self.ds 
                 if self.img is None:
                     self.img = numpy.zeros((32,32),dtype=float)
                     nanless = self.img[~numpy.isnan(self.img)]
                     flatimg = (nanless).flatten()
-
+                else: 
+                    nanless = self.img[~numpy.isnan(self.img)]
+                    flatimg = (nanless).flatten()
             else: 
                 self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
                 if self.img is not None:
                     flatness = numpy.array(self.img).ravel()
                     nanless = flatness[~numpy.isnan(flatness)]
                     flatimg = (nanless).flatten()
+
                 else: 
                     print ('nothing to histogram yet')
                     flatimg = [0,1,0]
-
             data = [go.Histogram(x=flatimg)]
 
             layout = go.Layout(
