@@ -57,7 +57,7 @@ class BpReconstruction:
             # data contains fl.v and f0.v 
             f1 = np.array(data)
             # if the jacobian is not normalized, data may not to be normalized too.
-            ds_bp = self.eit.solve(f1, self.f0, normalize=False)
+            ds_bp = self.eit.solve(f1, self.f0, normalize=True)
             self.img = np.real(ds_bp)
 
         except RuntimeError as err:
