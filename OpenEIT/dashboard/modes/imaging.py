@@ -13,9 +13,13 @@ from flask import send_from_directory
 import serial.tools.list_ports
 import OpenEIT.dashboard
 import queue
-import numpy
+import numpy as np
 import base64
 #import io
+#import decimal 
+from plotly import exceptions, optional_imports
+import plotly.colors as clrs
+from plotly.graph_objs import graph_objs
 
 PORT = 8050
 S_TO_MS = 1000
@@ -83,9 +87,6 @@ class Tomogui(object):
         else:
             logger.info("rendering new image ...")
 
-    def dist_origin(self,x, y, z):
-        return z
-
     def set_baseline(self):
         print ('setting the baseline')
         self.controller.baseline()
@@ -94,6 +95,22 @@ class Tomogui(object):
         self.run_file = True
         # this should be a bool so that self. controller.step_file is called every update interval. 
         # self.controller.step_file()
+
+    def map_z2color(self,zval, colormap, vmin, vmax):
+        #map the normalized value zval to a corresponding color in the colormap
+
+        if vmin>vmax:
+            raise ValueError('incorrect relation between vmin and vmax')
+        t=(zval-vmin)/float((vmax-vmin))#normalize val
+        R, G, B, alpha=colormap(t)
+        return 'rgb('+'{:d}'.format(int(R*255+0.5))+','+'{:d}'.format(int(G*255+0.5))+\
+               ','+'{:d}'.format(int(B*255+0.5))+')'
+
+    def tri_indices(self,simplices):
+        #simplices is a numpy array defining the simplices of the triangularization
+        #returns the lists of indices i, j, k
+
+        return ([triplet[c] for triplet in simplices] for c in range(3))
 
     def return_layout(self):
 
@@ -312,6 +329,21 @@ class Tomogui(object):
             dash.dependencies.Input('setmode', 'n_clicks')
             ], )
         def update_output(selected_algorithm,selected_electrodes,n_clicks):
+            if n_clicks is None:            
+                c = self.controller.serial_getmode()
+                selected_algorithm = self.controller.algorithm
+                if 'c' in c:
+                    print ('8 electrode mode')
+                    selected_electrodes = '8'
+                elif 'd' in c:
+                    print ('16 electrode mode')
+                    selected_electrodes = '16'
+                elif 'e' in c:
+                    print ('32 electrode mode')
+                    selected_electrodes = '32'
+                else: 
+                    selected_electrodes = 'unknown'
+
             if n_clicks is not None:
                 # this is getting called whenever we load it, which is a mistake. 
                 print(selected_algorithm)
@@ -328,40 +360,17 @@ class Tomogui(object):
                     data_to_send = str(value) + '\n'
                     self.controller.serial_write(data_to_send,selected_algorithm)
 
-            #     data_to_send = str(value) + '\n'
-            #     self.serial_handler.write(text)
-            #     # send this through the serial port. 
-            #     self.serial_setmode(text)
-            #     self._mode = text # just the first text not the \n
-            #     if 'a' in self._mode or 'b' in self._mode:
-            #         print ('time series or BIS \n')
-            #         self.image_reconstruct.stop_reconstructing() 
-            #         # clear the queue as well. 
-            #         self._data_queue.queue.clear()
-            #         self._image_queue.queue.clear()
-            #         print (self._mode)
-            #     else: 
-            #         if 'c' in self._mode:
-            #             self._n_el = 8 
-            #         elif 'd' in self._mode:
-            #             self._n_el = 16
-            #         elif 'e' in self._mode:
-            #             self._n_el = 32
-    
-            # self.update_algorithm(self._algorithm,self._n_el)
-
-
                 self.algorithm  = selected_algorithm
                 self.n_el       = int(selected_electrodes)
                 # if the algorithm setting is change, we need to re-initialize the whole thing. 
                 if self.algorithm  == 'greit':
                     self.gx,self.gy,self.ds = self.controller.greit_params()
-                    self.img = self.ds # numpy.zeros((32,32),dtype=float)
+                    self.img = self.ds # np.zeros((32,32),dtype=float)
                 else: 
                     self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
-                    self.img = numpy.zeros(self.x.shape[0]) 
+                    self.img = np.zeros(self.x.shape[0]) 
 
-                return selected_algorithm+selected_electrodes
+            return selected_algorithm+selected_electrodes
 
         @self.app.callback(
                     Output("arunfile", "children"),
@@ -438,6 +447,7 @@ class Tomogui(object):
             [Input('minimum_range', 'value'),
              Input('maximum_range', 'value')])
         def display_controls(datasource_1_value, datasource_2_value):
+
 
                 print (datasource_1_value, datasource_2_value) 
 
@@ -529,7 +539,6 @@ class Tomogui(object):
                     eye=dict(x=0.0, y=0.0, z=2.5)
                 )
 
-
                 noaxis=dict(showbackground=False,
                             showline=False,
                             zeroline=False,
@@ -539,8 +548,8 @@ class Tomogui(object):
                           )
 
                 layout = go.Layout(
-                         width=400,
-                         height=400,
+                         width=800,
+                         height=800,
                          scene=dict(
                             xaxis=noaxis,
                             yaxis=noaxis,
@@ -553,45 +562,34 @@ class Tomogui(object):
                             )
                         )
 
-                if self.img is None:
+                if self.img is None or (len(self.el_pos) != self.controller.n_el):
                     self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
-                    self.img = numpy.zeros(self.x.shape[0]) 
+                    self.img = np.zeros(self.x.shape[0]) 
                     self.img[1] = 2.0
 
-                try:
-                    # currently we do no scaling based on the range to scale. 
-                    # this is pretty limiting when it comes to testing. 
-                    # I need to dynamically change the colormap... 
-                    data = FF.create_trisurf(x=self.x, y=self.y, z=self.img,
-                                             simplices=self.tri,
-                                             color_func=self.dist_origin, # this is equivalent to the mask in tripcolor. 
-                                             colormap='Portland',
-                                             show_colorbar=False,
-                                             title="Mesh Reconstruction",
-                                             aspectratio=dict(x=1.0, y=1.0, z=0.01),
-                                             showbackground=False,
-                                             plot_edges=False,
-                                             height=600, width=600, 
-                                             scale=None,
-                                             ) 
-                except: # this exception is called when changing electrode number without reloading the imaging dash. 
-                    print ('exception occurred as reloaded figure of different size')
-                    self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
-                    self.img = numpy.zeros(self.x.shape[0]) 
+                if self.vmin >= self.vmax: 
+                    self.vmin = 0 
+                    self.vmax = 1000
+
+                simplices=self.tri
+                colormap = cm.plasma # specify the colormap
+                if len(self.img) == 0: 
+                    self.img = np.zeros(self.x.shape[0]) 
                     self.img[1] = 2.0
 
-                data = FF.create_trisurf(x=self.x, y=self.y, z=self.img,
-                     simplices=self.tri,
-                     color_func=self.dist_origin, # this is equivalent to the mask in tripcolor. 
-                     colormap='Portland',
-                     show_colorbar=False,
-                     title="Mesh Reconstruction",
-                     aspectratio=dict(x=1.0, y=1.0, z=0.01),
-                     showbackground=False,
-                     plot_edges=False,
-                     height=600, width=600, 
-                     scale=None,
-                     ) 
+                points3D = np.vstack((self.x,self.y,self.img)).T
+                tri_vertices=map(lambda index: points3D[index], simplices)# vertices of the surface triangles     
+                zmean=[np.mean(tri[:,2]) for tri in tri_vertices ]# mean values of z-coordinates of 
+                                                                  #triangle vertices
+                min_zmean=self.vmin #np.min(zmean)
+                max_zmean=self.vmax #np.max(zmean)
+                facecolor=[self.map_z2color(zz,  colormap, min_zmean, max_zmean) for zz in zmean]
+                I,J,K=self.tri_indices(simplices)
+                self.zoro = np.zeros(len(self.img))
+
+                data = [
+                    go.Mesh3d(x=self.x,y=self.y,z=self.zoro,facecolor = facecolor,i=I,j=J,k=K,name='')
+                ]
 
             return {'data': data, 'layout': layout}
 
@@ -607,17 +605,17 @@ class Tomogui(object):
                 #self.gx,self.gy,self.ds = self.controller.greit_params()
                 #self.img = self.ds 
                 if self.img is None:
-                    self.img = numpy.zeros((32,32),dtype=float)
-                    nanless = self.img[~numpy.isnan(self.img)]
+                    self.img = np.zeros((32,32),dtype=float)
+                    nanless = self.img[~np.isnan(self.img)]
                     flatimg = (nanless).flatten()
                 else: 
-                    nanless = self.img[~numpy.isnan(self.img)]
+                    nanless = self.img[~np.isnan(self.img)]
                     flatimg = (nanless).flatten()
             else: 
                 self.x,self.y,self.tri,self.el_pos = self.controller.plot_params()
                 if self.img is not None:
-                    flatness = numpy.array(self.img).ravel()
-                    nanless = flatness[~numpy.isnan(flatness)]
+                    flatness = np.array(self.img).ravel()
+                    nanless = flatness[~np.isnan(flatness)]
                     flatimg = (nanless).flatten()
 
                 else: 
@@ -644,9 +642,9 @@ class Tomogui(object):
 
         def autoscale(): 
             print ('we are in the autoscale function')
-            nanless = self.img[~numpy.isnan(self.img)]
-            self.vmax= float(int(numpy.max(nanless)*100))/100.0
-            self.vmin =float(int(numpy.min(nanless)*100))/100.0
+            nanless = self.img[~np.isnan(self.img)]
+            self.vmax= float(int(np.max(nanless)*100))/100.0
+            self.vmin =float(int(np.min(nanless)*100))/100.0
 
             if self.vmax <= self.vmin: # safety value. 
                 self.vmin = 0

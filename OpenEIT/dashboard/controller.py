@@ -224,7 +224,6 @@ class Controller:
         self.image_reconstruct.baseline()        
         self.image_reconstruct.start_reconstructing()
 
-
         if self._algorithm == 'jac' or self._algorithm == 'bp': 
             self.x,self.y,self.tri,self.el_pos = self.image_reconstruct.get_plot_params()
         if self._algorithm == 'greit':
@@ -271,6 +270,7 @@ class Controller:
         self.serial_handler.write(text)
         # send this through the serial port. 
         self.serial_setmode(text)
+
         self._mode = text # just the first text not the \n
         if 'a' in self._mode or 'b' in self._mode:
             print ('time series or BIS \n')

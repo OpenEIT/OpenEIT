@@ -204,20 +204,16 @@ class SerialHandler:
                     self.device = ''
                     self.stoprequest = threading.Event()
 
-
                 def run(self):
 
                     while not self.stoprequest.isSet():
 
                         self.ble = Adafruit_BluefruitLE.get_provider()
                         self.ble.initialize()
-           
                         # Clear any cached data because both bluez and CoreBluetooth have issues with
                         # caching data and it going stale.
                         self.ble.clear_cached_data()
-                
                         adapter = self.ble.get_default_adapter()
-        
                         adapter.power_on()
 
                         print('Using adapter: {0}'.format(adapter.name))

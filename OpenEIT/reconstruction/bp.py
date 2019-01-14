@@ -31,6 +31,7 @@ class BpReconstruction:
         self.n_el = n_el # number of electrodes. 
         self.step = 1 
         self.el_dist = int(self.n_el/2) # random initialize number 
+
         # we create this according to an opposition protocol to maximize contrast. 
         self.ex_mat = eit_scan_lines(ne = self.n_el, dist = self.el_dist)
         """ 0. construct mesh """
@@ -38,6 +39,8 @@ class BpReconstruction:
         self.mesh_obj, self.el_pos = mesh.create(self.n_el)
         """ 3. Set Up BP """
         self.eit =  bp(self.mesh_obj,self.el_pos, ex_mat=self.ex_mat, step=self.step, parser='std')
+
+        self.eit.setup(weight='none')
 
     def update_reference(self,data):
         self.baseline_flag = 1
