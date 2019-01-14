@@ -11,7 +11,7 @@ Python 3.6.1+
 
 ## Install
 ```
-pip -r requirements.txt
+pip install -r requirements.txt
 ```
 
 ## Run
