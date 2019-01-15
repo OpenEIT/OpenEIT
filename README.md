@@ -13,9 +13,9 @@ Python 3.6.1+
 ```
 pip install -r requirements.txt
 
-Note: If you are having an install problem first try to install the anaconda environment which ensures windows/linux or OSX environments are configured correctly: https://www.anaconda.com/download/ 
-
 ```
+
+Note: If you are having an install problem first try to install the anaconda environment which ensures windows/linux or OSX environments are configured correctly: https://www.anaconda.com/download/ 
 
 ## Run
 ```
