@@ -1,16 +1,27 @@
 # Serial handler class.
 from __future__ import absolute_import
+from sys import platform
 import time
 import threading
 import logging
 import serial
 import serial.threaded
 import uuid
-from OpenEIT.backend.bluetooth import Adafruit_BluefruitLE
-from OpenEIT.backend.bluetooth.Adafruit_BluefruitLE.services import UART
-import objc
-from PyObjCTools import AppHelper
+
 import os 
+
+if platform == "linux" or platform == "linux2":
+    # linux
+    import objc
+    from PyObjCTools import AppHelper
+elif platform == "darwin":
+    # OS X
+    import objc
+    from PyObjCTools import AppHelper    
+    from OpenEIT.backend.bluetooth import Adafruit_BluefruitLE
+    from OpenEIT.backend.bluetooth.Adafruit_BluefruitLE.services import UART
+elif platform == "win32":
+    print ('windows users')
 
 # Define service and characteristic UUIDs used by the UART service.
 UART_SERVICE_UUID = uuid.UUID('6E400001-B5A3-F393-E0A9-E50E24DCCA9E')
@@ -79,8 +90,9 @@ class SerialHandler:
         self._mode = 'd' # mode
 
         self.raw_text = 'streamed data'
-        # Get the BLE provider for the current  platform.
-        self.ble = Adafruit_BluefruitLE.get_provider()
+        if platform == "darwin":
+            # Get the BLE provider for the current  platform.
+            self.ble = Adafruit_BluefruitLE.get_provider()
         # add these into the main scope of Serial handler instead of the BLE Class handler. 
         self.ble_line = ''
         self.get_line_lock = 0 

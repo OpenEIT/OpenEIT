@@ -2,8 +2,13 @@ from __future__ import absolute_import
 import argparse
 import logging
 
-#import configparser
-from OpenEIT.backend.bluetooth import Adafruit_BluefruitLE
+from sys import platform
+
+if platform == "darwin":
+    # OS X
+    from OpenEIT.backend.bluetooth import Adafruit_BluefruitLE
+    # Get the BLE provider for the current platform.
+    ble = Adafruit_BluefruitLE.get_provider()
 #import .dashboard
 from OpenEIT.dashboard import runGui
 from OpenEIT.dashboard import Controller
@@ -15,8 +20,7 @@ FORMAT = '%(asctime)-15s %(message)s'
 logging.basicConfig(format=FORMAT, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Get the BLE provider for the current platform.
-ble = Adafruit_BluefruitLE.get_provider()
+
 
 # TODO: Improve State Feedback
 # The current connection and playback state should be clearly visible
