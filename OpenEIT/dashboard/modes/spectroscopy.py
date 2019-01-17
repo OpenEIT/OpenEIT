@@ -13,7 +13,7 @@ import queue
 
 PORT = 8050
 S_TO_MS = 1000
-PLOT_REFRESH_INTERVAL = 1.0 * S_TO_MS
+PLOT_REFRESH_INTERVAL = 0.5 * S_TO_MS
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
@@ -47,6 +47,7 @@ class BISgui(object):
         full_ports = list(serial.tools.list_ports.comports())
         self.portnames  = [item[0] for item in full_ports]
         self.mode = self.controller.serial_getmode()
+        print (self.mode)
         # b followed by \r gives bioimpedance spectroscopy data. 
         self.freqs = [200,500,800,1000,2000,5000,8000,10000,15000,20000,30000,40000,50000,60000,70000]
         self.psd   = [0,0,0,0,0,0,0,0,0,0,0,0,0,0] 
@@ -57,7 +58,6 @@ class BISgui(object):
     # Get's new data off the serial port. 
     def process_data(self):
         while not self.controller.data_queue.empty():
-            # stuff = self.controller.data_queue.get()
             f,amp = self.controller.data_queue.get()
             self.data_dict[f] = amp
 

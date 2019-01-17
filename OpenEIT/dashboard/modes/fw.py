@@ -160,6 +160,7 @@ class FWgui(object):
                     data_to_send = str(value) + '\n'
                     self.controller.serial_write(data_to_send)
                     #print (data_to_send)
+                    
                     return data_to_send
 
             return 'connect to send data'

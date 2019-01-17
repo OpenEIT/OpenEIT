@@ -65,12 +65,9 @@ class Tomogui(object):
 
         self.vmin = 0 
         self.vmax = 1000
-
         self.mode = self.controller.serial_getmode()
-
         self.rsvaluemin = self.vmin
         self.rsvaluemax = self.vmax
-
         self.run_file = False 
 
         self.n_electrodes = ['8','16','32']
@@ -79,7 +76,6 @@ class Tomogui(object):
 
     # Get's new data off the serial port. 
     def process_data(self):
-
         try:
             self.img = self.controller.image_queue.get_nowait()
         except queue.Empty:
@@ -198,7 +194,7 @@ class Tomogui(object):
                         ], className='btn-group',  style={'width': '100%', 'display': 'inline-block'} ),
 
 
-                       html.Div(
+                        html.Div(
                                 id='slider-container',
                                 style={'width': '100%', 'display': 'inline-block','text-align': 'center'}
                         ),
@@ -342,7 +338,7 @@ class Tomogui(object):
                     print ('32 electrode mode')
                     selected_electrodes = '32'
                 else: 
-                    selected_electrodes = 'unknown'
+                    selected_electrodes = '- non-imaging mode'
 
             if n_clicks is not None:
                 # this is getting called whenever we load it, which is a mistake. 
@@ -419,20 +415,6 @@ class Tomogui(object):
                 autoscale()  
                 return  self.vmin
 
-        # @self.app.callback(
-        #             Output("range-slider", "value"),
-        #             [Input("maximum_range", "value")], )
-        # def change_maxrange(value):
-        #     self.rsvaluemax = value
-        #     return value
-
-        # @self.app.callback(
-        #             Output("ab", "children"),
-        #             [Input("minimum_range", "value")], )
-        # def change_minrange(value):
-        #     self.rsvaluemin = value
-        #     return 'ab'
-
         @self.app.callback(
             Output('output-container-range-slider', 'children'),
             [Input('range-slider', 'value')])
@@ -447,11 +429,7 @@ class Tomogui(object):
             [Input('minimum_range', 'value'),
              Input('maximum_range', 'value')])
         def display_controls(datasource_1_value, datasource_2_value):
-
-
                 print (datasource_1_value, datasource_2_value) 
-
-
                 DYNAMIC_CONTROLS = {}
                 therange = int(datasource_2_value) - int(datasource_1_value)
                 step     = int(therange)//10

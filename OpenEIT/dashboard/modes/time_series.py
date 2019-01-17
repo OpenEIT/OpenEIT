@@ -23,7 +23,7 @@ _LOGGER.addHandler(logging.StreamHandler())
 
 PORT = 8050
 S_TO_MS = 1000
-PLOT_REFRESH_INTERVAL = 0.5 * S_TO_MS
+PLOT_REFRESH_INTERVAL = 0.1 * S_TO_MS
 
 
 DATA_OUTPUT_DIR = 'data'
