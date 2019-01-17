@@ -23,7 +23,7 @@ from plotly.graph_objs import graph_objs
 
 PORT = 8050
 S_TO_MS = 1000
-PLOT_REFRESH_INTERVAL = 1.0 * S_TO_MS
+PLOT_REFRESH_INTERVAL = 0.5 * S_TO_MS
 
 # _LOGGER = logging.getLogger(__name__)
 # _LOGGER.setLevel(logging.DEBUG)
