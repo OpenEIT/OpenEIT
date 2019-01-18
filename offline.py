@@ -1,12 +1,9 @@
 """
+
+# Copyright (c) Mindseye Biomedical LLC. All rights reserved.
+# Distributed under the (new) CC BY-NC-SA 4.0 License. See LICENSE.txt for more info.
+
 	Read in a data file and plot it using an algorithm. 
-
-	TODO: GREIT AND JAC seem lesser than BP! 
-	Thorax Project: 
-	Need to collect some better data, I clearly had an electrode misconnection on last data collect. 
-
-	Toggle with algorithm settings to improve even further. 
-
 
 """
 from __future__ import division, absolute_import, print_function

@@ -79,16 +79,16 @@ setup(
             'icon': 'icons/macos',
             #'splash': 'images/ios_splash',
         },
-        # 'linux': {
-        #     'app_requires': [
-        #         'toga-gtk==0.3.0.dev11',
-        #     ]
-        # },
-        # 'windows': {
-        #     'app_requires': [
-        #         'toga-winforms==0.3.0.dev11',
-        #     ]
-        # },
+        'linux': {
+            #'app_requires': [
+            #    'toga-gtk==0.3.0.dev11',
+            #]
+        },
+        'windows': {
+            #'app_requires': [
+            #    'toga-winforms==0.3.0.dev11',
+            #]
+        },
 
     }
 )

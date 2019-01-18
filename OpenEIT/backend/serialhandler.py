@@ -1,3 +1,9 @@
+"""
+
+# Copyright (c) Mindseye Biomedical LLC. All rights reserved.
+# Distributed under the (new) CC BY-NC-SA 4.0 License. See LICENSE.txt for more info.
+
+"""
 # Serial handler class.
 from __future__ import absolute_import
 from sys import platform

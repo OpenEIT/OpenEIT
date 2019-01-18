@@ -1,3 +1,9 @@
+"""
+
+# Copyright (c) Mindseye Biomedical LLC. All rights reserved.
+# Distributed under the (new) CC BY-NC-SA 4.0 License. See LICENSE.txt for more info.
+
+"""
 from . import time_series
 from . import spectroscopy
 from . import imaging

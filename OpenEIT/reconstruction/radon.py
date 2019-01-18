@@ -1,4 +1,8 @@
 """
+
+# Copyright (c) Mindseye Biomedical LLC. All rights reserved.
+# Distributed under the (new) CC BY-NC-SA 4.0 License. See LICENSE.txt for more info.
+
 This module contains an image reconstruction implementation based
 on interpolation and inverse radon transformation.
 """

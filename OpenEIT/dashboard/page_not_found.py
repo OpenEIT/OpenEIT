@@ -1,3 +1,9 @@
+"""
+
+# Copyright (c) Mindseye Biomedical LLC. All rights reserved.
+# Distributed under the (new) CC BY-NC-SA 4.0 License. See LICENSE.txt for more info.
+
+"""
 import dash_core_components as dcc
 import dash_html_components as html
 

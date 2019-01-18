@@ -1,5 +1,10 @@
 """
+
+# Copyright (c) Mindseye Biomedical LLC. All rights reserved.
+# Distributed under the (new) CC BY-NC-SA 4.0 License. See LICENSE.txt for more info.
+
 Reconstruction of image data from raw data.
+
 """
 
 # TODO: define reconstruction algorithm independent device

@@ -1,3 +1,10 @@
+"""
+
+# Copyright (c) Mindseye Biomedical LLC. All rights reserved.
+# Distributed under the (new) CC BY-NC-SA 4.0 License. See LICENSE.txt for more info.
+
+"""
+
 from __future__ import absolute_import
 import argparse
 import logging
