@@ -72,8 +72,8 @@ class Tomogui(object):
         self.vmin = 0 
         self.vmax = 1000
         self.mode = self.controller.serial_getmode()
-        self.rsvaluemin = self.vmin
-        self.rsvaluemax = self.vmax
+        # self.rsvaluemin = self.vmin
+        # self.rsvaluemax = self.vmax
         self.run_file = False 
 
         self.n_electrodes = ['8','16','32']
@@ -122,9 +122,7 @@ class Tomogui(object):
                     rel='stylesheet',
                     href='/static/bootstrap.min.css'
                 ),
-
                 html.Div( [  
-
                     # The histogram and controls part: 
                     html.Div( [
 
@@ -149,7 +147,6 @@ class Tomogui(object):
                                 value = self.controller._algorithm,
                                 ),
                             ], className='btn-group',style={'width': '40%', 'display': 'inline-block','text-align': 'center'} ),
-
 
                             html.Div( [
                             dcc.Dropdown(
@@ -322,7 +319,6 @@ class Tomogui(object):
                 return 'step back'
             else: 
                 return 'not step back'
-
 ###
         @self.app.callback(
             dash.dependencies.Output('algorithm_setting', 'children'),
@@ -425,17 +421,25 @@ class Tomogui(object):
             Output('output-container-range-slider', 'children'),
             [Input('range-slider', 'value')])
         def update_output(value):
-            # based on value, updated colorbar vmin and vmax. 
-            self.vmin = value[0]
-            self.vmax = value[1]
-            return format(value)
+            print ('the the update value function')
+            print (value)
+            if value[0] > value[1]: 
+                self.vmin = value[1]
+                self.vmax = value[0] 
+            else: 
+                self.vmin = value[0]
+                self.vmax = value[1]                
+
+            return ('('+str(self.vmin)+','+str(self.vmax)+')') #format(value)
 
         @self.app.callback(
             Output('slider-container', 'children'),
             [Input('minimum_range', 'value'),
              Input('maximum_range', 'value')])
         def display_controls(datasource_1_value, datasource_2_value):
-                print (datasource_1_value, datasource_2_value) 
+                # print ('display controls')
+                # print (datasource_1_value, datasource_2_value) 
+
                 DYNAMIC_CONTROLS = {}
                 therange = int(datasource_2_value) - int(datasource_1_value)
                 step     = int(therange)//10
@@ -448,7 +452,7 @@ class Tomogui(object):
                     min   = datasource_1_value,
                     max   = datasource_2_value,
                     step  = therange//20,
-                    value = [((int(datasource_1_value) + therange)//10),((int(datasource_2_value) - 5*therange)//10)]
+                    value = [((int(datasource_2_value) - 5*therange)//10),((int(datasource_1_value) + therange)//10)]
                 )
                 return html.Div(
             DYNAMIC_CONTROLS
@@ -586,8 +590,8 @@ class Tomogui(object):
             #data = [go.Histogram(x=flatimg)]
             if self.algorithm == 'greit':
                 # print ('algorithm is greit')
-                #self.gx,self.gy,self.ds = self.controller.greit_params()
-                #self.img = self.ds 
+                # self.gx,self.gy,self.ds = self.controller.greit_params()
+                # self.img = self.ds 
                 if self.img is None:
                     self.img = np.zeros((32,32),dtype=float)
                     nanless = self.img[~np.isnan(self.img)]
@@ -634,8 +638,6 @@ class Tomogui(object):
                 self.vmin = 0
                 self.vmax = 1000 
 
-            self.rsvaluemin = self.vmin
-            self.rsvaluemax = self.vmax
             display_controls(self.vmin,self.vmax)
 
         return self.layout
