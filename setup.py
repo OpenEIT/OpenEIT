@@ -20,18 +20,18 @@ VERSION = '0.1.0'
 AUTHOR = 'Jean Rintoul'
 LICENSE = 'LICENSE'
 INSTALL_REQUIRES = [
-    'imageio==2.2.0',
+    'imageio==2.4.1',
     'matplotlib==2.1.1',
-    'numpy==1.14.0',
+    'numpy==1.16.2',
     'pyserial==3.4',
-    'scikit-image==0.13.1',
-    'scipy==1.0.0',
+    'scikit-image==0.14.2',
+    'scipy==1.2.1',
     'six==1.11.0',
     'Adafruit-BluefruitLE==0.9.10',
-    'dash==0.28.2',
-    'dash-html-components==0.13.2',
-    'dash_core_components==0.33.0',
-    'PyObjC==5.0'
+    'dash==0.35.0',
+    'dash-html-components==0.13.5',
+    'dash_core_components==0.42.1',
+    'PyObjC==5.1'
 ]
 
 
