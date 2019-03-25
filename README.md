@@ -6,7 +6,7 @@ Biomedical Imaging has previously been expensive and near impossible to hack and
 
 ## Requirements
 ```
-Python 3.6.1+
+Python 3.6.7+
 ```
 
 ## Install
