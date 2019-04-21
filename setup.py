@@ -31,7 +31,7 @@ INSTALL_REQUIRES = [
     'dash==0.35.0',
     'dash-html-components==0.13.5',
     'dash_core_components==0.42.1',
-    'PyObjC==5.1'
+    'PyObjC==5.1; sys_platform=="darwin"'
 ]
 
 

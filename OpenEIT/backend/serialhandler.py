@@ -18,8 +18,8 @@ import os
 
 if platform == "linux" or platform == "linux2":
     # linux
-    import objc
-    from PyObjCTools import AppHelper
+    from OpenEIT.backend.bluetooth import Adafruit_BluefruitLE
+    from OpenEIT.backend.bluetooth.Adafruit_BluefruitLE.services import UART
 elif platform == "darwin":
     # OS X
     import objc
