@@ -57,7 +57,11 @@ class FWgui(object):
         self.portnames  = [item[0] for item in full_ports]
 
         sep = ' '
-        rest = str(full_ports[-1]).split(sep, 1)[0]
+        #rest = str(full_ports[-1]).split(sep, 1)[0]
+        if len(full_ports) > 0:
+            rest = str(full_ports[-1]).split(sep, 1)[0]
+        else:
+            rest = 'none'
 
         self.currentport = rest
 
