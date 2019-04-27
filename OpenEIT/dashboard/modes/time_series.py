@@ -7,7 +7,7 @@
 import logging
 import os
 import dash
-from dash.dependencies import Output, Event
+from dash.dependencies import Output, Input
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.plotly as py
@@ -220,14 +220,15 @@ class Timeseriesgui(object):
                 ),
                 dcc.Interval(
                     id='interval-component',
-                    interval=PLOT_REFRESH_INTERVAL
+                    interval=PLOT_REFRESH_INTERVAL,
+                    n_intervals=0
                 ),
 
             ] )      
          
         @self.app.callback(Output('live-update-time-series', 'figure'),
-                      events=[Event('interval-component', 'interval')])
-        def update_graph_scatter():
+                      [Input('interval-component', 'n_intervals')])
+        def update_graph_scatter(n):
             self.mode = self.controller.serial_getmode()
             if 'a' in self.mode:
                 # update from the data queue. 
@@ -275,8 +276,8 @@ class Timeseriesgui(object):
                 return {'data': data, 'layout': layout}
 
         @self.app.callback(Output('live-update-psd', 'figure'),
-                      events=[Event('interval-component', 'interval')])
-        def update_graph_scatter():
+                      [Input('interval-component', 'n_intervals')])
+        def update_graph_scatter(n):
             if len(self.x) > 0:
                 trace1 = go.Scatter(
                     x=self.freqs,

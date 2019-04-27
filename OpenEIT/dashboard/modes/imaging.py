@@ -7,7 +7,7 @@
 import logging
 import os
 import dash
-from dash.dependencies import Input, Output, Event, State
+from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.plotly as py
@@ -27,7 +27,7 @@ from plotly import exceptions, optional_imports
 import plotly.colors as clrs
 from plotly.graph_objs import graph_objs
 
-PORT = 8050
+PORT    = 8050
 S_TO_MS = 1000
 PLOT_REFRESH_INTERVAL = 0.5 * S_TO_MS
 
@@ -264,7 +264,8 @@ class Tomogui(object):
                         ),
                         dcc.Interval(
                         id='interval-component',
-                        interval=PLOT_REFRESH_INTERVAL
+                        interval=PLOT_REFRESH_INTERVAL,
+                        n_intervals=0
                     ),
                     ] , style={'width': '50%', 'display': 'inline-block','text-align': 'center'}), 
 
@@ -459,8 +460,8 @@ class Tomogui(object):
             )
         @self.app.callback(
             Output('live-update-image', 'figure'),
-            events=[Event('interval-component', 'interval')])
-        def update_graph_scatter():
+            [Input('interval-component', 'n_intervals')])
+        def update_graph_scatter(n):
             # update the data queue. 
             if self.run_file is True: 
                if self.controller.step_file():
@@ -583,8 +584,8 @@ class Tomogui(object):
 
         @self.app.callback(
             Output('live-update-histogram', 'figure'),
-            events=[Event('interval-component', 'interval')])
-        def update_graph_scatter():
+            [Input('interval-component', 'n_intervals')])
+        def update_graph_scatter(n):
 
             flatimg = [0,1,0]
             #data = [go.Histogram(x=flatimg)]

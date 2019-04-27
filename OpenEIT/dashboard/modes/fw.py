@@ -7,7 +7,7 @@
 import logging
 import os
 import dash
-from dash.dependencies import Output,Event,Input,State
+from dash.dependencies import Output,Input,State
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.plotly as py
@@ -148,15 +148,16 @@ class FWgui(object):
                 html.P('A:Time Series, B: Bioimpedance Spectroscopy, C: 8 electrode EIT, D: 16 electrode EIT, E: 32 electrode EIT'),
                 dcc.Interval(
                     id='interval-component',
-                    interval=PLOT_REFRESH_INTERVAL
+                    interval=PLOT_REFRESH_INTERVAL,
+                    n_intervals=0
                 ),
 
             ] )     
 
         @self.app.callback(
             Output('textarea', 'value'),
-            events=[Event('interval-component', 'interval')])
-        def update_textbox():
+            [Input('interval-component', 'n_intervals')])
+        def update_textbox(n):
             return self.controller.return_line()
 
         @self.app.callback(
@@ -177,8 +178,8 @@ class FWgui(object):
 
         @self.app.callback(
             Output('current_mode', 'children'),
-            events=[Event('interval-component', 'interval')])   
-        def mode():
+            [Input('interval-component', 'n_intervals')])   
+        def mode(n):
             m = self.controller.serial_getmode()
             if 'a' in m:
                 return 'time series mode'

@@ -7,7 +7,7 @@
 import logging
 import os
 import dash
-from dash.dependencies import Output, Event
+from dash.dependencies import Output, Input
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.plotly as py
@@ -88,7 +88,8 @@ class BISgui(object):
 
                 dcc.Interval(
                     id='interval-component',
-                    interval=PLOT_REFRESH_INTERVAL
+                    interval=PLOT_REFRESH_INTERVAL,
+                    n_intervals=0
                 ),
 
             
@@ -96,8 +97,8 @@ class BISgui(object):
      
         @self.app.callback(
             Output('live-update-spectrogram', 'figure'),
-            events=[Event('interval-component', 'interval')])
-        def update_graph_scatter():
+            [Input('interval-component', 'n_intervals')])
+        def update_graph_scatter(n):
             self.mode = self.controller.serial_getmode()
             if 'b'in self.mode:
                 # update the data queue. 
