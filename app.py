@@ -53,6 +53,10 @@ def main():
     ap.add_argument("--virtual-tty",
                     action="store_true",
                     default=False)
+    ap.add_argument("--debug-dash",
+                    action="store_true",
+                    default=False,
+                    help="Show debug messages in GUI.")
     ap.add_argument("port", nargs="?")
 
     args = ap.parse_args()
@@ -68,7 +72,7 @@ def main():
         #mode=mode
     )
 
-    gui = runGui(controller)
+    gui = runGui(controller, args.debug_dash)
     gui.run()
 
 
