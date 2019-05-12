@@ -23,9 +23,10 @@ logger = logging.getLogger(__name__)
 
 class runGui(object):
 
-    def __init__(self,controller):
+    def __init__(self, controller, debug=False):
 
         # Both controller and app have to be passed to the dynamically loaded page to enable callbacks and functionality with the rest of the package. 
+        self.debug = debug
         self.controller = controller
         self.app = None
 
@@ -210,7 +211,7 @@ class runGui(object):
                     return csv_string  
   
         # Switch to False    
-        self.app.run_server(debug=False)
+        self.app.run_server(debug=self.debug)
 
     def on_connection_state_changed(self, connected):
         if connected:
