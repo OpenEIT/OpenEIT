@@ -66,6 +66,7 @@ The Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International Lice
 
 If you'd like to make a derivative of this project in a commercial setting, we'd love a payment in exchange for a commercial license so that we can afford to spend time both maintaining this project and making more projects like this one. If this hybrid open source model works, it would enable open source projects to receive some funding, making the global commons stronger to benefit everyone. 
 
+## Donate! 
+Are you using this effort? Is it helpful to you? Would you like to see it maintained, updated and perhaps a new iteration come out sometime? This project has taken a lot of time and effort! The best way to keep it going is to donate. 
 
-
-
+<a class="dbox-donation-button" href="https://donorbox.org/donate-to-make-biomedical-imaging-more-accessible" style="background:#2d81c5 url(https://d1iczxrky3cnb2.cloudfront.net/red_logo.png) no-repeat 37px center; color: #fff;text-decoration: none;font-family: Verdana,sans-serif;display: inline-block;font-size: 16px;padding: 15px 38px 15px 75px; -webkit-border-radius: 2px; -moz-border-radius: 2px; border-radius: 2px; box-shadow: 0 1px 0 0 #1f5a89; text-shadow: 0 1px rgba(0, 0, 0, 0.3);" >Donate</a>
