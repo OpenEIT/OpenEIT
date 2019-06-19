@@ -70,3 +70,5 @@ If you'd like to make a derivative of this project in a commercial setting, we'd
 Are you using this effort? Is it helpful to you? Would you like to see it maintained, updated and perhaps a new iteration come out sometime? This project has taken a lot of time and effort! The best way to keep it going is to donate. 
 
 <a class="dbox-donation-button" href="https://donorbox.org/donate-to-make-biomedical-imaging-more-accessible?hide_donation_meter=true" style="background:#2d81c5 url(https://d1iczxrky3cnb2.cloudfront.net/red_logo.png) no-repeat 56px center; color: #fff;text-decoration: none;font-family: Verdana,sans-serif;display: inline-block;font-size: 16px;padding: 17px 64px 17px 94px; -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; box-shadow: 0 2px 0 0 #1f5a89; text-shadow: 0 1px rgba(0, 0, 0, 0.3);" >Donate</a>
+
+<a href="https://donorbox.org/donate-to-make-biomedical-imaging-more-accessible" target="_blank">Donate Text or Image HTML</a>
