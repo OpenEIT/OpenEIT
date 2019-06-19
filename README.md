@@ -60,7 +60,7 @@ There are three classic EIT algorithms implemented - Back Projection, Graz Conse
 
 ## License 
 
-The Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License seems to fit best with this project. Basically your'e liable to keep it open, and if you want to do a private fork for a commercial application please contact us and pay a small fee(which goes towards the open source project next revision) either in cash or equity in your company. Check out the human readable summary here: 
+The Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License seems to fit best with this project. Basically your'e liable to keep any derivative works open, and if you want to do a private fork for a commercial application please contact us and pay a small fee(which goes towards the open source project next revision) either in cash or equity in your company. Check out the human readable summary here: 
 
 <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
 
