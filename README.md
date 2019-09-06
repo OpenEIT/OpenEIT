@@ -2,6 +2,10 @@
 
 Biomedical Imaging has previously been expensive and near impossible to hack and experiment with. If more people experimented and understood how imaging works we could move it forward much faster and make these transformative technologies available to everyone. OpenEIT(EIT is for electrical impedance tomography) uses non-ionizing AC current to recreate an image of any conductive material, such as your lungs, arm or head, using the same tomographic reconstruction technique as a CATSCAN. The PCB is only 2" square, with bluetooth, making it a portable and hackable way to do biomedical imaging!
 
+## NOTE FOR WINDOWS USERS
+SPECTRA uses an FTDI chip to communicate via UART. The VCP FTDI driver is not pre-installed on Windows(but is on all other OS's). If you are running a Windows machine you should follow these instructions to install the FTDI driver before continuing to the dashboard install: https://www.ftdichip.com/Drivers/VCP.htm
+
+
 ##  How to install the python dashboard. 
 
 ## Requirements
