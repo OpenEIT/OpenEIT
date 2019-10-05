@@ -18,7 +18,7 @@ Python 3.6.7+
 pip install -r requirements.txt
 
 ```
-If you have any problems, it's likely that the requirements installation didn't complete, and you still have incorrect versions of the modules installed. The following command will check the version of a single module. 
+If you have any problems, it's likely that the requirements installation didn't complete, and you have incorrect versions of the modules installed. The following command will check the version of a single module, and you should check each module to ensure it is the same as listed in the requirements.txt file. 
 
 ```
 pip show <package_name>
