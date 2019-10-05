@@ -18,8 +18,21 @@ Python 3.6.7+
 pip install -r requirements.txt
 
 ```
+If you have any problems, it's likely that the requirements installation didn't complete, and you still have incorrect versions of the modules installed. The following command will check the version of a single module. 
 
-Note: If you are having an install problem first try to install the anaconda environment which ensures windows/linux or OSX environments are configured correctly: https://www.anaconda.com/download/ 
+```
+pip show <package_name>
+
+```
+
+Alternatively you can the following to get a list of all installed modules. Before creating an issue in this repository regarding the installation process, check each version in the requirements.txt against your installed version. They should match! 
+
+```
+pip freeze
+
+```
+
+
 
 ## Run
 ```
