@@ -31,7 +31,13 @@ Alternatively you can the following to get a list of all installed modules. Befo
 pip freeze
 
 ```
+## Make sure the button is in the 'ON' position. 
 
+Plug in your microUSB cable if using with serial, then make sure that switch is turned on. Bluetooth and serial comms should now be active. 
+
+<p align="center">
+	<img src="images/on_position.png" height="400">
+</p>
 
 
 ## Run
