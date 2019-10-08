@@ -25,7 +25,7 @@ pip show <package_name>
 
 ```
 
-Alternatively you can the following to get a list of all installed modules. Before creating an issue in this repository regarding the installation process, check each version in the requirements.txt against your installed version. They should match! 
+Alternatively you can run the following command to get a list of all installed modules. Before creating an issue in this repository regarding the installation process, check each version in the requirements.txt against your installed version. They should match! 
 
 ```
 pip freeze
