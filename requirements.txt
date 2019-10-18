@@ -7,4 +7,5 @@ scipy==1.2.1
 six==1.11.0
 Adafruit-BluefruitLE==0.9.10
 dash==0.42.0
+plotly==3.10
 PyObjC==5.1; sys_platform=="darwin"
