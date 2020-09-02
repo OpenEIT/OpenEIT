@@ -30,7 +30,7 @@ el_pos = g.el_pos
 ex_mat = g.ex_mat
 step = 1
 radius = 0.6
-numberofmeasures = 100
+numberofmeasures = 10
 # array, node, perm. 
 
 """ 1. problem setup """
@@ -52,10 +52,12 @@ for i in range(length):
 	           {'x': 0,    'y': yval,  'd': 0.1, 'perm': 0.1},
 	           {'x': 0,    'y': -yval, 'd': 0.1, 'perm': 0.1}]
 	mesh_new = OpenEIT.reconstruction.mesh.set_perm(mesh_obj, anomaly=anomaly, background=1.0)
+	
+
 	# delta_perm = np.real(mesh_new['perm'] - mesh_obj['perm'])
-	# 
+	# # 
 	# perm = mesh_obj['perm']
-	# show alpha
+	# #show alpha
 	# fig, ax = plt.subplots(figsize=(6, 4))
 	# im = ax.tripcolor(pts[:, 0], pts[:, 1], tri, delta_perm,
 	#                   shading='flat', cmap=plt.cm.viridis)
@@ -65,6 +67,8 @@ for i in range(length):
 	# ax.set_ylim([-1.2, 1.2])
 	# ax.set_title(r'$\Delta$ Conductivity')
 	# fig.set_size_inches(6, 4)
+	# ax.show()
+
 	""" 2. FEM forward simulations """
 	# calculate simulated data
 	fwd = OpenEIT.reconstruction.Forward(mesh_obj, el_pos)
@@ -77,7 +81,7 @@ for i in range(length):
 
 	info = f1.v
 
-	# print (f1.v.shape)
+	print (len(info))
 
 	filepath = 'simdata.txt'
 	with open(filepath, 'a') as file_handler:
