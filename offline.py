@@ -30,7 +30,7 @@ def parse_line(line):
 
 n_el = 32
 """ Load Data: select a file you have created by simdata.py, or recorded through the dashboard """
-text_file = open("simdata.txt", "r")
+text_file = open("rawdata8.txt", "r")
 lines       = text_file.readlines()
 print ("length lines: ",len(lines))
 # This is the baseline image.
