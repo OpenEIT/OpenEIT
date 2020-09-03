@@ -29,7 +29,7 @@ _LOGGER.addHandler(logging.StreamHandler())
 
 PORT = 8050
 S_TO_MS = 1000
-PLOT_REFRESH_INTERVAL = 0.1 * S_TO_MS
+PLOT_REFRESH_INTERVAL = 0.2 * S_TO_MS
 
 
 DATA_OUTPUT_DIR = 'data'
@@ -54,10 +54,11 @@ flask_logger.setLevel(logging.INFO)
 
 
 def _clean_value(value, value_history):
+
     if len(value_history) > 0:
         last_valid_value = value_history[-1]
     else:
-        last_valid_value = None
+        last_valid_value = 0 #None
 
     if value:
         try:
@@ -165,21 +166,23 @@ class Timeseriesgui(object):
             value = _clean_value(value,self.y)
 
             if value:
+                #print ('v',len(self.y) )
                 self.y.append(value)
+                self.x.append(t)
                 if len(self.y) > self.buffer_size:
                     self.y.pop(0)
+                    self.x.pop(0)
+                # Update sliding window
+                new_window = np.append(self.sliding_window[1:], value)
+                self.sliding_window = new_window
 
-            # Update sliding window
-            new_window = np.append(self.sliding_window[1:], value)
-            self.sliding_window = new_window
-
-             # Update y_filtered
-            if self.filter_data:
-                results = signal.lfilter(self.a, self.b, self.sliding_window)
-                result = results[-1]
-                self.y_filtered.append(result)
-                if len(self.y_filtered) > self.buffer_size:
-                    self.y_filtered.pop(0)
+                 # Update y_filtered
+                if self.filter_data:
+                    results = signal.lfilter(self.a, self.b, self.sliding_window)
+                    result = results[-1]
+                    self.y_filtered.append(result)
+                    if len(self.y_filtered) > self.buffer_size:
+                        self.y_filtered.pop(0)
 
             # Update PSD
             nsperg = NSPERG
@@ -188,13 +191,10 @@ class Timeseriesgui(object):
             self.freqs, self.psd = signal.welch(self.y,
                                                 nperseg=nsperg,
                                                 fs=SAMPLING_FREQUENCY)
-            # Update x
-            self.x.append(t)
-            if len(self.x) > self.buffer_size:
-                self.x.pop(0)
+
         
         # Log some stats about the data
-        # self._log_stats()     
+        #self._log_stats()     
 
     def return_layout(self):
 
@@ -230,6 +230,7 @@ class Timeseriesgui(object):
                       [Input('interval-component', 'n_intervals')])
         def update_graph_scatter(n):
             self.mode = self.controller.serial_getmode()
+
             if 'a' in self.mode:
                 # update from the data queue. 
                 self.process_data()
@@ -267,7 +268,7 @@ class Timeseriesgui(object):
                         range=[x_min, x_max]
                     ),
                     yaxis=dict(
-                        title='Impedance (ohms)',
+                        title='Impedance (Ohms)',
                         range=[y_min, y_max]
                     ),
 
@@ -293,7 +294,7 @@ class Timeseriesgui(object):
                 layout = go.Layout(
                     title='Power Spectrum Density',
                     xaxis=dict(
-                        title='Frequency (Hz)',
+                        title='Frequency (Hz) Log Scale',
                         type='log',
                         autorange=True
                     ),
@@ -305,7 +306,7 @@ class Timeseriesgui(object):
                 )
 
                 return {'data': data, 'layout': layout}
-        #         
+        
         return self.layout
         # _LOGGER.debug('App running at: http://localhost:%s' % PORT)
         # app.run_server(port=PORT)

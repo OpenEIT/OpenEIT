@@ -124,7 +124,7 @@ class BISgui(object):
                         autorange=True
                     ),
                     yaxis=dict(
-                        title='Amplitude',
+                        title='Amplitude (Ohms)',
                         autorange=True
                     )
                 )
