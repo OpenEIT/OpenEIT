@@ -31,6 +31,23 @@ Alternatively you can run the following command to get a list of all installed m
 pip freeze
 
 ```
+
+You can also install in a virtual environment following the directions below, which means any other python modules you have installed remain the same, and the EIT project will be in a separate sandbox. 
+
+```
+virtualenv -p python3 envtest
+
+source envtest/bin/activate
+
+git clone https://github.com/OpenEIT/OpenEIT.git
+
+cd OpenEIT
+
+pip install -r requirements.txt
+
+python app.py 
+```
+
 ## Make sure the button is in the 'ON' position. 
 
 Plug in your microUSB cable if using with serial, then make sure that switch is turned on. Bluetooth and serial comms should now be active. 
