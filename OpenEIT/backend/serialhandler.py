@@ -20,7 +20,7 @@ if platform == "linux" or platform == "linux2":
     # linux
     from OpenEIT.backend.bluetooth import Adafruit_BluefruitLE
     from OpenEIT.backend.bluetooth.Adafruit_BluefruitLE.services import UART
-elif platform == "darwin":
+elif platform == "darwin_xx":
     # OS X
     import objc
     from PyObjCTools import AppHelper    
@@ -96,7 +96,7 @@ class SerialHandler:
         self._mode = 'd' # mode
 
         self.raw_text = 'streamed data'
-        if platform == "darwin":
+        if platform == "darwin_xx":
             # Get the BLE provider for the current  platform.
             self.ble = Adafruit_BluefruitLE.get_provider()
         # add these into the main scope of Serial handler instead of the BLE Class handler. 

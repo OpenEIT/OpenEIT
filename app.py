@@ -11,7 +11,8 @@ import logging
 
 from sys import platform
 
-if platform == "darwin":
+# NOTE: darwin_xx should be just darwin. I've done this as a hack to stop the currently out of date adafruit ble library. More work needs to be done on bluetooth to update. Would appreciate a contribution. Thanks.
+if platform == "darwin_xx":
     # OS X
     from OpenEIT.backend.bluetooth import Adafruit_BluefruitLE
     # Get the BLE provider for the current platform.

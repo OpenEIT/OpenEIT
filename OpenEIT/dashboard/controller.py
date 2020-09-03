@@ -83,7 +83,8 @@ class FilePlaybackDash(PlaybackStrategy):
 
         res = []
         for line in string.splitlines():
-            data = OpenEIT.backend.parse_line(line)
+            data = OpenEIT.backend.serialhandler.parse_any_line(line,'b')
+            #data = OpenEIT.backend.parse_line(line)
             if data is not None:
                 res.append(data)
         self._file_data = res
