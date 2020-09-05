@@ -10,7 +10,7 @@ SPECTRA uses an FTDI chip to communicate via UART. The VCP FTDI driver is not pr
 
 ## Requirements
 ```
-Python 3.6.7+
+Python 3.6.7 (Issues with Matplotlib 2.1.1 with python 3.7 and 3.8 in windows)
 ```
 
 ## Install
