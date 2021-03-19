@@ -10,7 +10,7 @@ import dash
 from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
 import dash_html_components as html
-import plotly.plotly as py
+import chart_studio.plotly as py
 from plotly.graph_objs import *
 import plotly.graph_objs as go
 import plotly.figure_factory as FF
