@@ -10,7 +10,7 @@ import dash
 from dash.dependencies import Output,Input,State
 import dash_core_components as dcc
 import dash_html_components as html
-import plotly.plotly as py
+import chart_studio.plotly as py
 import plotly.graph_objs as go
 from flask import send_from_directory
 import serial.tools.list_ports
