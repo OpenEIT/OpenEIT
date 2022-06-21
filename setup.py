@@ -22,7 +22,7 @@ LICENSE = 'LICENSE'
 INSTALL_REQUIRES = [
     'imageio==2.4.1',
     'matplotlib==2.1.1',
-    'numpy==1.16.2',
+    'numpy==1.22.0',
     'pyserial==3.4',
     'scikit-image==0.14.2',
     'scipy==1.2.1',
