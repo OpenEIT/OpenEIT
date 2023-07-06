@@ -25,7 +25,7 @@ INSTALL_REQUIRES = [
     'numpy==1.16.2',
     'pyserial==3.4',
     'scikit-image==0.14.2',
-    'scipy==1.2.1',
+    'scipy==1.10.0',
     'six==1.11.0',
     'Adafruit-BluefruitLE==0.9.10',
     'dash==0.42.0',
