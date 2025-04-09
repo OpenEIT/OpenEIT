@@ -10,7 +10,8 @@ import dash
 from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
 import dash_html_components as html
-import plotly.plotly as py
+# import plotly.plotly as py
+import plotly as py
 from plotly.graph_objs import *
 import plotly.graph_objs as go
 import plotly.figure_factory as FF
@@ -440,9 +441,12 @@ class Tomogui(object):
         def display_controls(datasource_1_value, datasource_2_value):
                 # print ('display controls')
                 # print (datasource_1_value, datasource_2_value) 
+                therange = 0 
+                if datasource_2_value is not None:
+                    therange = int(datasource_2_value) - int(datasource_1_value)
 
                 DYNAMIC_CONTROLS = {}
-                therange = int(datasource_2_value) - int(datasource_1_value)
+
                 step     = int(therange)//10
                 if step == 0:
                     step = 1
