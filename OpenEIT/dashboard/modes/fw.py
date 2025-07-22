@@ -146,7 +146,7 @@ class FWgui(object):
                     rows = 10,
                     style={'width': '60%'}
                 ),
-                html.P('A:Time Series, B: Bioimpedance Spectroscopy, C: 8 electrode EIT, D: 16 electrode EIT, E: 32 electrode EIT'),
+                html.P('a:Time Series, b: Bioimpedance Spectroscopy, c: 8 electrode EIT, d: 16 electrode EIT, e: 32 electrode EIT'),
                 dcc.Interval(
                     id='interval-component',
                     interval=PLOT_REFRESH_INTERVAL,
