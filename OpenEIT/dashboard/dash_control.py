@@ -1,3 +1,4 @@
+import time
 """
 
 # Copyright (c) Mindseye Biomedical LLC. All rights reserved.
@@ -7,8 +8,8 @@
 import dash 
 import logging
 from dash.dependencies import Input, Output
-import dash_html_components as html
-import dash_core_components as dcc
+from dash import html
+from dash import dcc
 from . import page_not_found
 from . import state 
 from .modes import mode_names
@@ -102,13 +103,9 @@ class runGui(object):
 
                 html.Div([
                     html.Pre('    '),
-                    html.A(children='Download', 
-                        id='download-link',
-                        download="rawdata.txt",
-                        href="",
-                        target="_blank"
-                    ),
+                    html.Span(id='record-status', style={'color': 'white'}),
                 ], className='btn-group'),
+                dcc.Download(id='download-raw'),
             ], className='navbar navbar-expand-lg navbar-dark bg-dark'), 
 
             dcc.Location(id='url', refresh=False),
@@ -130,24 +127,26 @@ class runGui(object):
             static_folder = os.path.join(os.getcwd(), 'static')
             return send_from_directory(static_folder, path)
 
-        @self.app.callback( 
-            dash.dependencies.Output('recordbutton', 'children'),
-            [dash.dependencies.Input('recordbutton', 'n_clicks')])
-        def callback_dropdown(n_clicks):
-            if n_clicks is not None:
-                if self.recording == False:
-                    if self.connected == True: 
-                        self.controller.start_recording()
-                        return 'Stop Recording'
-                    else: 
-                        #print ('comms not connected')
-                        return 'Record'
-                else:
-                    print ('stop recording')
-                    self.controller.stop_recording()
-                    return 'Record'
-            else: 
-                return 'Record'
+        @self.app.callback(
+            [Output('recordbutton', 'children'),
+             Output('record-status', 'children'),
+             Output('download-raw', 'data')],
+            [Input('recordbutton', 'n_clicks')],
+            prevent_initial_call=True)
+        def toggle_recording(n_clicks):
+            # Single callback: start on first click, stop + download on the next.
+            if not self.controller.serial_handler.recording:
+                if not self.connected:
+                    return 'Record', 'connect first', dash.no_update
+                self.controller.start_recording()
+                return 'Stop Recording', 'recording...', dash.no_update
+            self.controller.stop_recording()
+            datastream = self.controller.serial_getbytestream()
+            if not datastream:
+                return 'Record', 'no data received', dash.no_update
+            fname = time.strftime('rawdata_%Y%m%d_%H%M%S.txt')
+            nlines = datastream.count('\n')
+            return 'Record', 'saved {} lines'.format(nlines), dcc.send_string(datastream, fname)
 
         # This displays the page, it should also pass the app and controller info to the class. 
         @self.app.callback(Output('page-content', 'children'),
@@ -190,26 +189,6 @@ class runGui(object):
 
             return navbar_links
 
-        @self.app.callback(
-            dash.dependencies.Output('download-link', 'href'),
-            [dash.dependencies.Input('recordbutton', 'n_clicks')])
-        def update_download_link(n_clicks):
-            if n_clicks is not None:
-                if self.recording == False:
-                    return 'hi there'
-                    # if self.connected == True: 
-                    #     self.controller.start_recording()
-                    #     return ''
-                    # else: 
-                    #     print ('comms not connected')
-                    #     return ''
-                else:
-                    datastream = self.controller.serial_getbytestream()
-                    # print (datastream)
-                    #csv_string = datastream.to_csv(index=False, encoding='utf-8')
-                    csv_string = "data:text/txt;charset=utf-8," + urllib.parse.quote(datastream)
-                    return csv_string  
-  
         # Switch to False    
         self.app.run(debug=self.debug)
 

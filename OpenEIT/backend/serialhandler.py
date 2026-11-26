@@ -192,7 +192,7 @@ class SerialHandler:
                         if serialhandler._recording:
                             logger.info("serialhandler._recording")
                             # serialhandler._record_file.write(line + "\n")
-                            serialhandler._bytestream = serialhandler._bytestream + line
+                            serialhandler._bytestream = serialhandler._bytestream + line + '\n'
                     
                     res = parse_any_line(line,serialhandler._mode)
                     if res is not None:
@@ -278,7 +278,7 @@ class SerialHandler:
                                     if serialhandler._recording:
                                         # logger.info("serialhandler._recording")
                                         # serialhandler._record_file.write(data + "\n")
-                                        serialhandler._bytestream = serialhandler._bytestream + data
+                                        serialhandler._bytestream = serialhandler._bytestream + data + ('' if data.endswith('\n') else '\n')
 
                                 res = parse_any_line(data,serialhandler._mode)
 

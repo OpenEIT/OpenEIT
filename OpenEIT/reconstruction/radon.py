@@ -37,7 +37,7 @@ class RadonReconstruction:
         self.image_pixels = 100
 
         self.img = np.zeros((self.image_pixels, self.image_pixels),
-                            dtype=np.float)
+                            dtype=float)
 
         # Above should be calculated elsewhere and is only for
         # plotting purposes.
@@ -63,8 +63,8 @@ class RadonReconstruction:
         n2 = np.add(self.y_center*np.ones(len(self.theta_points)),
                     self.radius*np.sin(self.theta_points))
 
-        x = n1.astype(np.int)
-        y = n2.astype(np.int)
+        x = n1.astype(int)
+        y = n2.astype(int)
 
         d = dict()
         for i, (point1, point2) in enumerate(self.logfile):
@@ -90,7 +90,7 @@ class RadonReconstruction:
                     break
             else:  # create a new array in this slot
                 img = np.zeros((self.image_pixels, self.image_pixels),
-                               dtype=np.float)
+                               dtype=float)
                 img[l_x, l_y] = data[i]
                 d[angle] = img
 

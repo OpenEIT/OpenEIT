@@ -105,8 +105,10 @@ class ReconstructionWorker(threading.Thread):
                         before = time.time()
                         img = self._reconstruction.eit_reconstruction(data)
                         logger.info("reconstruction time: %.2f", time.time() - before)
-                    except RuntimeError as err:
-                        logger.info('reconstruction error: %s', err)
+                    except Exception as err:
+                        # e.g. frame length doesn't match the electrode count:
+                        # skip this frame instead of killing the worker thread.
+                        logger.warning('reconstruction error (frame of %d values skipped): %s', len(data), err)
                     else:
                         self._output_queue.put(img)
                 else: 

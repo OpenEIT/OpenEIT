@@ -8,8 +8,8 @@ import logging
 import os
 import dash
 from dash.dependencies import Input, Output, State
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 # import plotly.plotly as py
 import plotly as py
 from plotly.graph_objs import *
@@ -70,8 +70,9 @@ class Tomogui(object):
         full_ports = list(serial.tools.list_ports.comports())
         self.portnames  = [item[0] for item in full_ports]
 
-        self.vmin = 0 
-        self.vmax = 1000
+        # None = auto: colour range follows each new image until the user fixes a range.
+        self.vmin = None
+        self.vmax = None
         self.mode = self.controller.serial_getmode()
         # self.rsvaluemin = self.vmin
         # self.rsvaluemax = self.vmax
@@ -99,12 +100,30 @@ class Tomogui(object):
         # this should be a bool so that self. controller.step_file is called every update interval. 
         # self.controller.step_file()
 
+    def image_range(self):
+        """Min/max of the current image, ignoring NaNs; safe fallback if empty/flat."""
+        if self.img is None:
+            return 0.0, 1.0
+        vals = np.asarray(self.img, dtype=float).ravel()
+        vals = vals[np.isfinite(vals)]
+        if vals.size == 0:
+            return 0.0, 1.0
+        lo, hi = float(vals.min()), float(vals.max())
+        if hi <= lo:
+            hi = lo + 1e-9
+        return lo, hi
+
+    def color_range(self):
+        if self.vmin is not None and self.vmax is not None and self.vmin < self.vmax:
+            return self.vmin, self.vmax
+        return self.image_range()
+
     def map_z2color(self,zval, colormap, vmin, vmax):
         #map the normalized value zval to a corresponding color in the colormap
 
         if vmin>vmax:
             raise ValueError('incorrect relation between vmin and vmax')
-        t=(zval-vmin)/float((vmax-vmin))#normalize val
+        t=min(max((zval-vmin)/float((vmax-vmin)),0.0),1.0)#normalize val
         R, G, B, alpha=colormap(t)
         return 'rgb('+'{:d}'.format(int(R*255+0.5))+','+'{:d}'.format(int(G*255+0.5))+\
                ','+'{:d}'.format(int(B*255+0.5))+')'
@@ -218,7 +237,7 @@ class Tomogui(object):
                                 placeholder='Enter',
                                 style={'width': 80},
                                 type='number',
-                                value='0'
+                                value=None
                             ),
                             ], style={'width': '20%', 'display': 'inline-block','text-align': 'center'} ),
 
@@ -233,7 +252,7 @@ class Tomogui(object):
                                 placeholder='Enter',
                                 type='number',
                                 style={'width': 80},
-                                value='1000'
+                                value=None
                             ),
                             ] , style={'width': '20%', 'display': 'inline-block','text-align': 'center'}), 
                          
@@ -404,64 +423,44 @@ class Tomogui(object):
                 return 'not baseline'
 
         @self.app.callback(
-                    Output("maximum_range", "value"),
-                    [Input("autoscale", "n_clicks")], )
+            [Output("minimum_range", "value"),
+             Output("maximum_range", "value")],
+            [Input("autoscale", "n_clicks")],
+            prevent_initial_call=True)
         def autoscale_data(n_clicks):
-            if n_clicks is not None:
-                autoscale()  
-                return  self.vmax
-
-        @self.app.callback(
-                    Output("minimum_range", "value"),
-                    [Input("autoscale", "n_clicks")], )
-        def autoscale_data(n_clicks):
-            if n_clicks is not None:
-                autoscale()  
-                return  self.vmin
+            lo, hi = self.image_range()
+            return round(lo, 4), round(hi, 4)
 
         @self.app.callback(
             Output('output-container-range-slider', 'children'),
-            [Input('range-slider', 'value')])
+            [Input('range-slider', 'value')],
+            prevent_initial_call=True)
         def update_output(value):
-            print ('the the update value function')
-            print (value)
-            if value[0] > value[1]: 
-                self.vmin = value[1]
-                self.vmax = value[0] 
-            else: 
-                self.vmin = value[0]
-                self.vmax = value[1]                
-
-            return ('('+str(self.vmin)+','+str(self.vmax)+')') #format(value)
+            if not value or value[0] is None or value[1] is None or value[0] == value[1]:
+                return dash.no_update
+            self.vmin, self.vmax = min(value), max(value)
+            return '({:.4g}, {:.4g})'.format(self.vmin, self.vmax)
 
         @self.app.callback(
             Output('slider-container', 'children'),
             [Input('minimum_range', 'value'),
              Input('maximum_range', 'value')])
-        def display_controls(datasource_1_value, datasource_2_value):
-                # print ('display controls')
-                # print (datasource_1_value, datasource_2_value) 
-                therange = 0 
-                if datasource_2_value is not None:
-                    therange = int(datasource_2_value) - int(datasource_1_value)
+        def display_controls(lo, hi):
+            # Empty or invalid range -> auto mode (colour range follows the data).
+            try:
+                lo, hi = float(lo), float(hi)
+            except (TypeError, ValueError):
+                self.vmin = self.vmax = None
+                return html.P('colour range: auto')
+            if lo >= hi:
+                self.vmin = self.vmax = None
+                return html.P('colour range: auto (min must be below max)')
+            self.vmin, self.vmax = lo, hi
+            return html.Div(dcc.RangeSlider(
+                id='range-slider', min=lo, max=hi, step=(hi - lo) / 100.0,
+                value=[lo, hi], marks=None,
+                tooltip={'placement': 'bottom', 'always_visible': False}))
 
-                DYNAMIC_CONTROLS = {}
-
-                step     = int(therange)//10
-                if step == 0:
-                    step = 1
-
-                DYNAMIC_CONTROLS = dcc.RangeSlider(
-                    id    = 'range-slider',
-                    marks= {i: ' {}'.format(i) for i in range(int(datasource_1_value), int(datasource_2_value),step)},
-                    min   = datasource_1_value,
-                    max   = datasource_2_value,
-                    step  = therange//20,
-                    value = [((int(datasource_2_value) - 5*therange)//10),((int(datasource_1_value) + therange)//10)]
-                )
-                return html.Div(
-            DYNAMIC_CONTROLS
-            )
         @self.app.callback(
             Output('live-update-image', 'figure'),
             [Input('interval-component', 'n_intervals')])
@@ -514,7 +513,7 @@ class Tomogui(object):
                     go.Heatmap(
                         z=self.img,
                         colorscale='Jet',
-                        zmin=self.vmin, zmax=self.vmax,
+                        zmin=self.color_range()[0], zmax=self.color_range()[1],
                         colorbar=dict(
                                 #title='Colorbar',
                                 lenmode = 'fraction',
@@ -560,9 +559,6 @@ class Tomogui(object):
                     self.img = np.zeros(self.x.shape[0]) 
                     self.img[1] = 2.0
 
-                if self.vmin >= self.vmax: 
-                    self.vmin = 0 
-                    self.vmax = 1000
 
                 simplices=self.tri
                 colormap = cm.plasma # specify the colormap
@@ -574,8 +570,7 @@ class Tomogui(object):
                 tri_vertices=map(lambda index: points3D[index], simplices)# vertices of the surface triangles     
                 zmean=[np.mean(tri[:,2]) for tri in tri_vertices ]# mean values of z-coordinates of 
                                                                   #triangle vertices
-                min_zmean=self.vmin #np.min(zmean)
-                max_zmean=self.vmax #np.max(zmean)
+                min_zmean, max_zmean = self.color_range()
                 facecolor=[self.map_z2color(zz,  colormap, min_zmean, max_zmean) for zz in zmean]
                 I,J,K=self.tri_indices(simplices)
                 self.zoro = np.zeros(len(self.img))
@@ -632,18 +627,6 @@ class Tomogui(object):
             )
 
             return {'data': data, 'layout': layout}
-
-        def autoscale(): 
-            print ('we are in the autoscale function')
-            nanless = self.img[~np.isnan(self.img)]
-            self.vmax= float(int(np.max(nanless)*100))/100.0
-            self.vmin =float(int(np.min(nanless)*100))/100.0
-
-            if self.vmax <= self.vmin: # safety value. 
-                self.vmin = 0
-                self.vmax = 1000 
-
-            display_controls(self.vmin,self.vmax)
 
         return self.layout
 

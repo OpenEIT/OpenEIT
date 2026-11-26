@@ -81,7 +81,7 @@ class Forward(object):
         if perm is None:
             perm0 = self.tri_perm
         elif np.isscalar(perm):
-            perm0 = np.ones(self.n_tri, dtype=np.float)
+            perm0 = np.ones(self.n_tri, dtype=float)
         else:
             assert perm.shape == (self.n_tri,)
             perm0 = perm
